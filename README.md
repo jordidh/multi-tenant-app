@@ -2,6 +2,11 @@
 
 Exemple d'aplicació multi tenant
 
+## Referencies
+
+<https://www.clickittech.com/saas/multi-tenant-node-js/>
+<https://blog.lftechnology.com/designing-a-secure-and-scalable-multi-tenant-application-on-node-js-15ae13dda778>
+
 ## Configuració de l'entorn de treball
 
 Creem un projecte nou a GitHub i el clonem en local

@@ -1,8 +1,140 @@
+/* 
+Warehouse pantone
+Gray => #292f32
+Blue => #3c5c6d
+Flesh => #a97a5f
+Yellow => #edd017
+Red => #7a2228
+*/
 body {
   padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 22px Verdana, Helvetica, Arial, sans-serif;
 }
 
 a {
-  color: #00B7FF;
+  color: #3c5c6d;
+}
+
+/* Add your CSS styles here */
+body {
+    background-color: #fff; 
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #292f32;
+    padding: 0px 0;
+}
+
+header {
+    color: #fff;
+    padding: 10px 0;
+}
+
+nav {
+    /*background-color: #7a2228;
+    color: #edd017;*/
+    text-align: center;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #3c5c6d;
+}
+
+li {
+    float: left;
+}
+
+a {
+    display: inline-block;
+    text-align: center;
+    padding: 14px 32px;
+    text-decoration: none;
+    color: #fff;
+}
+
+.leftspace {
+    margin-left: 164px;
+}
+
+a:hover {
+    background-color: #292f32;
+}
+
+a.bottom {
+    background-color: #292f32;
+}
+
+a.bottom:hover {
+    background-color: #7a2228;
+}
+
+h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 50;
+    padding: 50;
+    margin-left: 86px;
+}
+
+.content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+img {
+    max-width: 800px;
+    height: auto;
+}
+
+.big {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.section-gray {
+    background-color: #efefef;
+}
+
+.container {
+    display: flex;
+    height: 100%;
+}
+
+.column-left {
+    flex: 1;
+    padding: 100px;
+    border: 0px solid #ccc;
+    text-align: left;
+}
+
+.column-center {
+    flex: 1;
+    padding: 20px;
+    border: 0px solid #ccc;
+    text-align: center;
+    /*background-color: #7a2228;
+    color: #edd017;*/
+}
+
+.column-image {
+    flex: 1;
+    padding: 20px;
+    border: 0px solid #ccc;
+    text-align: left;
+}
+
+.column-bottom {
+    flex: 1;
+    padding: 20px;
+    border: 0px solid #ccc;
+    text-align: center;
+    color: #fff;
+    background-color: #3c5c6d;
 }

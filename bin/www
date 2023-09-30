@@ -7,6 +7,7 @@
 const app = require('../app');
 const debug = require('debug')('multi-tenant-app:server');
 const http = require('http');
+const logger = require('../api/logger');
 
 /**
  * Get port from environment and store in Express.
@@ -66,13 +67,16 @@ function onError (error) {
     switch (error.code) {
         case 'EACCES':
             console.error(bind + ' requires elevated privileges');
+            logger.error(`ExpressJS: ${bind} requires elevated privileges`);
             process.exit(1);
             break;
         case 'EADDRINUSE':
             console.error(bind + ' is already in use');
+            logger.error(`ExpressJS: ${bind} is already in use}`);
             process.exit(1);
             break;
         default:
+            logger.error(`ExpressJS: error ${error.code}`);
             throw error;
     }
 }
@@ -87,4 +91,5 @@ function onListening () {
         ? 'pipe ' + addr
         : 'port ' + addr.port;
     debug('Listening on ' + bind);
+    logger.info(`ExpressJS: Listening on ${bind}`);
 }

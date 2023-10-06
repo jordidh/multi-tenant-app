@@ -42,10 +42,10 @@ exports.connect = function (db, done) {
     done();
 };
 
-exports.get = function () {
+exports.getPool = function () {
     return state.pool;
 };
 
-exports.getPromise = function () {
+exports.getPromisePool = function () {
     return state.promisePool;
 };

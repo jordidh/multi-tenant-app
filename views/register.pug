@@ -11,20 +11,50 @@ block content
                 a(href='#') Prices
             li
                 a.leftspace(href='/login') Identify
-            li
-                a(href='/register') Register
 
     .container
         .column-left 
-            h2 nu+warehouse
-            p
-                | Los mejores empleados merecen
-            p.big
-                | el mejor software
-            p
-                | La única plataforma que necesitarás para manejar tu almacén:
-            p
-                | aplicaciones integradas, sencillas, y adoradas por millones de usuarios felices.
+            form(action='/register' method='post')
+                label(for='firstname') First name:
+                input#fname(type='text' name='firstname' value='' autofocus required='' minlength='3' maxlength='100')
+                br
+                label(for='lastname') Last name:
+                input#fname(type='text' name='lastname' value='' required='' minlength='3' maxlength='100')
+                br
+                label(for='username') User name:
+                input#fname(type='text' name='username' value='' required='' minlength='8' maxlength='100')
+                br
+                label(for='password1') Password:
+                input#user(type='password' name='password1' value=user required='' minlength='8' maxlength='72')
+                br
+                label(for='password2') Password:
+                input#user(type='password' name='password2' value=user required='' minlength='8' maxlength='72')
+                br
+                label(for='email') Email:
+                input#user(type='email' name='email' value=user required='' minlength='3' maxlength='200')
+                br
+                hr
+                label(for='organization') Organization name:
+                input#fname(type='text' name='organization' value='' required='' minlength='3' maxlength='100')
+                br
+                label(for='vatnumber') Vat number:
+                input#fname(type='text' name='vatnumber' value='' required='' minlength='3' maxlength='100')
+                br
+                label(for='country') Country:
+                input#fname(type='text' name='country' value='' required='' minlength='3' maxlength='100')
+                br
+                label(for='city') City:
+                input#fname(type='text' name='city' value='' required='' minlength='1' maxlength='100')
+                br
+                label(for='zipcode') Zip code:
+                input#fname(type='text' name='zipcode' value='' required='' minlength='3' maxlength='10')
+                br
+                label(for='address') Address:
+                input#fname(type='text' name='address' value='' required='' minlength='3' maxlength='255')
+                br
+                hr
+                br
+                input#submitof(name="submitCode" type='submit' value='Register' style='width: 20%;')
         .column-image
             img(src='images/homepage-desktop.png' alt='Image 1')
     .section-gray
@@ -101,10 +131,10 @@ block content
     .container
         .column-bottom
             p
-                a.bottom(href='/register') Start Now, it's free!
+                a.bottom(href='#') Start Now, it's free!
             p 
                 | Already have an account?&nbsp;
-                a.bottom(href='/login') Sign in    
+                a.bottom(href='#') Sign in    
             p
                 | Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla tincidunt bibendum justo, ac facilisis ipsum ultrices nec.
 

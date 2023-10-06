@@ -1,0 +1,61 @@
+extends layout
+
+block content
+    nav
+        ul
+            li
+                a.leftspace(href='#') Applications
+            li
+                a(href='#') Community
+            li
+                a(href='#') Prices
+            li
+                a.leftspace(href='/register') Register
+
+    .container
+        .column-left 
+            h2 nu+warehouse
+            form(action='/login' method='post')
+                label(for='username') User name:
+                input#fname(type='text' name='username' value='' autofocus)
+                br
+                label(for='password') Password:
+                input#user(type='password' name='user' value=user)
+                br
+                input#submitof(name="submitCode" type='submit' value='Login' style='width: 20%;')
+            p * Can not access your account? 
+                a.content(href='/resetpassword') Reset password
+        .column-image
+            img(src='images/homepage-desktop.png' alt='Image 1')
+    .section-gray
+        h2 One application for all warehouse
+        .container
+            .column-left
+                p
+                    | Traditional Warehouse:
+                    | This is a standard storage facility for goods, usually organized with racks, shelves, and pallets for efficient storage and retrieval.
+                p
+                    | Automated Warehouse:
+                    | An advanced type of warehouse that employs automation and robotic systems to handle the movement and storage of goods, optimizing efficiency.
+                p
+                    | Cold Storage Warehouse:
+                    | Specifically designed to store perishable goods, such as food and pharmaceuticals, at low temperatures to maintain their freshness and quality.
+                p
+                    | Distribution Center:
+                    | A facility that acts as a central hub for receiving, storing, and distributing products to various locations, often part of a larger supply chain network.
+                p
+                    | Fulfillment Center:
+                    | A specialized facility for packing and shipping online orders, commonly used in e-commerce operations.
+                p
+                    | Cross-Docking Facility:
+                    | A logistics hub where products are received and immediately shipped out without long-term storage, reducing inventory holding costs.
+                p
+                    | High-Bay Warehouse:
+                    | A warehouse with tall storage racks, allowing for vertical storage and maximizing the use of available vertical space.
+                p
+                    | Retail Warehouse:
+                    | A warehouse attached to or part of a retail store, used for storing excess stock or managing inventory for the retail operation.
+
+            .column-image
+                img(src='images/warehouse01.png' alt='Image 2')
+

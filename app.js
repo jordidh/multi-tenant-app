@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const logger = require('./api/logger');
 const database = require('./api/database');
+const uniqid = require('uniqid');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -28,7 +29,7 @@ database.connect(db, function (err) {
         console.error('Unable to connect to MySQL: ' + err);
         process.exit(1);
     } else {
-        database.get().query('SELECT NOW();', function (err) {
+        database.getPool().query('SELECT NOW();', function (err) {
             if (err) {
                 console.error('Unable to execute query to MySQL: ' + err);
                 process.exit(1);
@@ -67,6 +68,18 @@ app.use(
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+
+/**
+ * Generate one uniqueid everytime API is called, to trace the client call
+ */
+app.use(async (req, res, next) => {
+    // Get the requestId if its provided in the heather
+    const requestId = req.headers['x-request-id'];
+    // Save the requestId or create a new one if not exists
+    req.requestId = requestId || uniqid();
+
+    next();
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

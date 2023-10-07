@@ -69,3 +69,16 @@ CREATE TABLE `users` (
     INDEX user_name_index (`user_name`),
     FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
+
+-- Table with activation/invitation user codes
+-- Teh activation link can be made with the activation code and other information
+CREATE TABLE `activationcodes` (
+    `id` SERIAL PRIMARY KEY,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `activation_code` VARCHAR(255) NOT NULL,
+    `valid` BOOLEAN DEFAULT TRUE,
+    `created_at` TIMESTAMP DEFAULT NOW(),
+    `updated_at` TIMESTAMP DEFAULT NOW(),
+    INDEX activation_code_index (`activation_code`),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

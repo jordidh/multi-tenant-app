@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt'); // More info: https://en.wikipedia.org/wiki/Bc
 const database = require('./database');
 const logger = require('./logger');
 const uniqid = require('uniqid');
+const generator = require('generate-password');
 const ApiResult = require('./ApiResult');
 const ApiError = require('./ApiError');
 
@@ -72,6 +73,7 @@ module.exports = {
      * Creates a new tenant, a new organization a a new user
      * @param {*} organization : object with attributes: organization, vatnumber, country, city, zipcode, address
      * @param {*} user : object with attributes: firstname, lastname, username, password1, email
+     * @returns : ApiResult with the tenant uuid and the activation link
      */
     createTenant: async function (organization, user) {
         let sql = '';
@@ -99,100 +101,153 @@ module.exports = {
             // Generate tenant uuid
             const tenantUuid = uniqid();
 
-            // Get a free tenant db server
-            const tenant = await getFreeServerAvailable(conn, tenantUuid);
-            if (!tenant) {
-                throw new Error('No free servers available or error updating tenantsdbservers');
-            }
-
-            // Insert tenant: if tenant name and host are repeated, the transaction will rollback
-            sql = 'INSERT INTO tenants (uuid, db_name, db_host, db_username, db_password, db_port, created_at, updated_at) ' +
-                  'VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())';
-            const [tenantCreationResult] = await conn.execute(sql,
-                [tenantUuid, tenant.dbName, tenant.dbHost, tenant.dbUsername, tenant.dbPassword, tenant.dbPort]);
-            if (tenantCreationResult.affectedRows !== 1) {
-                logger.error(`tenant.createTenant(): Error creating tenant ${tenantUuid} with sql ${sql}`);
-                throw new Error(`Error creating tenant ${tenantUuid}`);
-            }
-
-            // Insert organization: if organization name or vat is repeated, the transaction will rollback
-            // because the table has a unique index
-            sql = 'INSERT INTO organizations (name, vat_number, country, city, zipcode, address, tenant_id, created_at, updated_at) ' +
-                  'VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
-            const [organizationCreationResult] = await conn.execute(sql,
-                [organization.name, organization.vat_number, organization.country, organization.city, organization.zipcode, organization.address, tenantCreationResult.insertId]);
-            if (organizationCreationResult.affectedRows !== 1) {
-                logger.error(`tenant.createTenant(): Error creating organization ${organization.name} with sql ${sql}`);
-                throw new Error(`Error creating organization ${organization.name}`);
-            }
-
             // Hash the user password with a salt
             const hashedPassword = await this.hashPassword(user.password1, tenantUuid);
 
-            // Insert user: if organization user_name or email is repeated, the transaction will rollback
-            // because the table has a unique index
-            sql = 'INSERT INTO users (first_name, last_name, user_name, password, password_salt, email, organization_id, created_at, updated_at) ' +
-                  'VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
-            const [userCreationResult] = await conn.execute(sql,
-                [user.firstname, user.lastname, user.username, hashedPassword, tenantUuid, user.email, organizationCreationResult.insertId]);
-            if (userCreationResult.affectedRows !== 1) {
-                logger.error(`tenant.createTenant(): Error creating user ${user.username} with sql ${sql}`);
-                throw new Error(`Error creating user ${user.username}`);
+            // Get a free tenant db server
+            const tenantDb = await reserveDBServer(conn, tenantUuid);
+            if (!tenantDb) {
+                throw new Error('No free servers available or error updating tenantsdbservers');
+            }
+
+            // Create the tenant, organization and user
+            const tenant = await createOrganizationTenant(conn, tenantUuid, tenantDb, organization, user, hashedPassword);
+            if (!tenant) {
+                throw new Error('Error creating tenant, organizaton or user');
+            }
+
+            // Create the activation link
+            const activationLink = await createActivationLink(conn, tenantUuid, tenant.userId);
+            if (!activationLink) {
+                throw new Error('Error creating activation link');
             }
 
             await conn.commit();
             logger.info('tenant.createTenant(): Transaction committed');
 
             // status, data, requestId, errors
-            return new ApiResult(200, 'Tenant created successfully', 1, []);
+            return new ApiResult(200, 'Tenant created successfully', 1, [tenantUuid, activationLink]);
         } catch (e) {
             logger.error(`tenant.createTenant(): Error creating tenant: ${e}`);
             await conn.rollback();
             logger.info('tenant.createTenant(): Transaction rolled back');
-            const error = new ApiError('REG01', `Error creating tenant ${e.message}`, '', '');
+            const error = new ApiError('REG01', e.message, '', '');
             return new ApiResult(500, 'Error creating tenant', 1, [error]);
         }
     }
 };
 
-async function getFreeServerAvailable (conn, tenantUuid) {
-    // Initialize tenant object
-    // TODO: generate a reandom password
-    const tenant = {
+async function createOrganizationTenant (conn, tenantUuid, tenant, organization, user, hashedPassword) {
+    // Insert tenant: if tenant name and host are repeated, the transaction will rollback
+    let sql = 'INSERT INTO tenants (uuid, db_name, db_host, db_username, db_password, db_port, created_at, updated_at) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    const [tenantCreationResult] = await conn.execute(sql,
+        [tenantUuid, tenant.dbName, tenant.dbHost, tenant.dbUsername, tenant.dbPassword, tenant.dbPort]);
+    if (tenantCreationResult.affectedRows !== 1) {
+        logger.error(`tenant.createOrganizationTenant(): Error creating tenant ${tenantUuid} with sql ${sql}`);
+        return null; // throw new Error(`Error creating tenant ${tenantUuid}`);
+    }
+
+    // Insert organization: if organization name or vat is repeated, the transaction will rollback
+    // because the table has a unique index
+    sql = 'INSERT INTO organizations (name, vat_number, country, city, zipcode, address, tenant_id, created_at, updated_at) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    const [organizationCreationResult] = await conn.execute(sql,
+        [organization.name, organization.vat_number, organization.country, organization.city, organization.zipcode, organization.address, tenantCreationResult.insertId]);
+    if (organizationCreationResult.affectedRows !== 1) {
+        logger.error(`tenant.createOrganizationTenant(): Error creating organization ${organization.name} with sql ${sql}`);
+        return null; // throw new Error(`Error creating organization ${organization.name}`);
+    }
+
+    // Insert user: if organization user_name or email is repeated,
+    // the transaction will rollback because the table has a unique index
+    // By default the user is not active (locked=true),
+    // the user must activate the account by clicking on the activation link
+    sql = 'INSERT INTO users (first_name, last_name, user_name, password, password_salt, email, organization_id, created_at, updated_at) ' +
+        'VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    const [userCreationResult] = await conn.execute(sql,
+        [user.firstname, user.lastname, user.username, hashedPassword, tenantUuid, user.email, organizationCreationResult.insertId]);
+    if (userCreationResult.affectedRows !== 1) {
+        logger.error(`tenant.createOrganizationTenant(): Error creating user ${user.username} with sql ${sql}`);
+        return null; // throw new Error(`Error creating user ${user.username}`);
+    }
+
+    return {
+        userId: userCreationResult.insertId,
+        organizationId: organizationCreationResult.insertId,
+        tenantId: tenantCreationResult.insertId
+    };
+}
+
+/**
+ * Searches for a server with available databases and updates the tenantsdbservers table to reserve one database
+ * This function can identify on which server the tenant database is located
+ * @param {*} conn : databa se connection
+ * @param {*} tenantUuid : tenant uuid
+ * @returns: null if error, otherwise an object with the tenant attributes
+ */
+async function reserveDBServer (conn, tenantUuid) {
+    // Update tenantsdbservers with the new tenant
+    // Select and update in one sentence to avoid errors and innecessary locks
+    let sql = 'UPDATE tenantsdbservers SET current_databases = current_databases + 1 WHERE id = (' +
+          'SELECT id FROM tenantsdbservers ' +
+          'WHERE current_databases < max_databases AND locked = false ' +
+          'ORDER BY priority ASC LIMIT 1)';
+    const [updateResult] = await conn.execute(sql, []);
+    if (updateResult.affectedRows !== 1) {
+        logger.error(`tenant.getFreeServerAvailable(): Error finding or updating tenantsdbservers with sql ${sql}`);
+        return null;
+    }
+
+    // Get updated server
+    sql = 'SELECT * FROM tenantsdbservers WHERE id = ?';
+    const [tenantDbServer] = await conn.execute(sql, [updateResult.updateId]);
+    if (tenantDbServer.length <= 0) {
+        logger.error(`tenant.getFreeServerAvailable(): Error finding updated tenantsdbservers with sql ${sql}`);
+        return null;
+    }
+
+    // Generate a random password
+    const pass = generator.generate({
+        length: 20,
+        numbers: true,
+        symbols: true,
+        uppercase: true,
+        strict: true
+    });
+
+    // Return tenant object
+    return {
         dbName: `db-${tenantUuid}`,
         dbUsername: `user-${tenantUuid}`,
-        dbPassword: 'password',
-        dbHost: 'localhost' || process.env.DB_HOST,
-        dbPort: '3306' || process.env.DB_PORT,
-        current_db: 0,
-        max_db: 0
+        dbPassword: pass,
+        dbHost: tenantDbServer[0].db_host,
+        dbPort: tenantDbServer[0].db_port
     };
+}
 
-    // Find free servers and lock the row and any associated index,
-    // so that other transactions will be prevented from updating any of those rows
-    // An error can use more databases of a server than the maximum allowed
-    let sql = 'SELECT * FROM tenantsdbservers ' +
-              'WHERE current_databases < max_databases AND locked = false ' +
-              'ORDER BY priority ASC LIMIT 1 ' +
-              'FOR UPDATE';
-    const [serverFound] = await conn.execute(sql, []);
-    if (serverFound.length <= 0) {
-        logger.error(`tenant.createTenant(): Error finfing free tenantsdbservers with sql ${sql}`);
+async function createActivationLink (conn, tenantUuid, userId) {
+    // Generate a random activation code
+    const activationCode = generator.generate({
+        length: 20,
+        numbers: true,
+        symbols: true,
+        uppercase: true,
+        strict: true
+    });
+    const activationCodeHashed = await this.hashPassword(activationCode, tenantUuid);
+
+    // Create the link
+    const link = `/activate?tenant=${tenantUuid}&user=${userId}&code=${activationCode}`;
+
+    // Insert the activation code in the database
+    const sql = 'INSERT INTO activation_codes (user_id, activation_code, created_at, updated_at) VALUES (?, ?, NOW(), NOW())';
+    const [insertResult] = await conn.execute(sql, [userId, activationCodeHashed]);
+    if (insertResult.affectedRows !== 1) {
+        logger.error(`tenant.createActivationLink(): Error inserting activation code with sql ${sql}`);
         return null;
     }
 
-    tenant.dbHost = serverFound[0].db_host;
-    tenant.dbPort = serverFound[0].db_port;
-    tenant.current_db = serverFound[0].current_databases + 1;
-    tenant.max_db = serverFound[0].max_databases;
-
-    // Update tenantsdbservers with the new tenant
-    sql = 'UPDATE tenantsdbservers SET current_databases = current_databases + 1 WHERE id = ?';
-    const [updateResult] = await conn.execute(sql, [serverFound[0].id]);
-    if (updateResult.affectedRows !== 1) {
-        logger.error(`tenant.createTenant(): Error updating tenantsdbservers with sql ${sql}`);
-        return null;
-    }
-
-    return tenant;
+    // Return the link
+    return link;
 }

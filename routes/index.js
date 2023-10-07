@@ -60,8 +60,8 @@ router.post('/register', async function (req, res, next) {
     };
 
     const creationResult = await tenant.createTenant(organization, user);
-    if (creationResult.error) {
-        res.render('error', { message: creationResult.error[0].message, error: {} });
+    if (creationResult.errors && creationResult.errors.length > 0) {
+        res.render('error', { message: `${creationResult.data}: ${creationResult.errors[0].message}`, error: {} });
         return;
     }
 

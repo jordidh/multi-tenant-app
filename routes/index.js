@@ -65,10 +65,12 @@ router.post('/register', async function (req, res, next) {
         return;
     }
 
-    res.render('register', { title: 'nu+warehouses' });
+    res.render('activate', { activationLink: creationResult.data.activationLink });
 });
 
 router.get('/activate', function (req, res, next) {
+    console.log(`${(new Date()).toISOString()} - [POST]/of/ received ${JSON.stringify(req.query)}`);
+    // {"tenant":"2yr1jbwflnggbxcx","user":"1","code":"oLFgy/vM3B-Sk%22:$_q%p"}
     res.render('activate', { title: 'nu+warehouses' });
 });
 

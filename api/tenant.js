@@ -15,21 +15,6 @@ const BCRYPT_PASSWROD_MAX_LENGTH = 72;
 module.exports = {
 
     /**
-     * Function that hashes a password with a salt
-     * @param {*} plainTextPassword
-     * @param {*} saltRounds : Number of rounds to generate the salt
-     * @returns : hashed password
-     */
-    hashPassword: async function (plainTextPassword, saltRounds) {
-        if (plainTextPassword.length > BCRYPT_PASSWROD_MAX_LENGTH) {
-            throw new Error(`Password too long, bcrypt does not allow passwords longer than ${BCRYPT_PASSWROD_MAX_LENGTH} characters.`);
-        }
-        const salt = await bcrypt.genSalt(saltRounds || BCRYPT_PASSWORD_SALT_ROUNDS);
-        const hash = await bcrypt.hash(plainTextPassword, salt);
-        return hash;
-    },
-
-    /**
      * Method that validates that a password respects the RegExp pattern
      * @param {*} plainTextPassword
      * @param {*} pattern : regular expression pattern to validate the password
@@ -102,7 +87,7 @@ module.exports = {
             const tenantUuid = uniqid();
 
             // Hash the user password with a salt
-            const hashedPassword = await this.hashPassword(user.password1, tenantUuid);
+            const hashedPassword = await hashPassword(user.password1);
 
             // Get a free tenant db server
             const tenantDb = await reserveDBServer(conn, tenantUuid);
@@ -126,7 +111,7 @@ module.exports = {
             logger.info('tenant.createTenant(): Transaction committed');
 
             // status, data, requestId, errors
-            return new ApiResult(200, 'Tenant created successfully', 1, [tenantUuid, activationLink]);
+            return new ApiResult(200, { message: 'Tenant created successfully', tenantUuid, activationLink }, 1, []);
         } catch (e) {
             logger.error(`tenant.createTenant(): Error creating tenant: ${e}`);
             await conn.rollback();
@@ -187,12 +172,18 @@ async function createOrganizationTenant (conn, tenantUuid, tenant, organization,
  * @returns: null if error, otherwise an object with the tenant attributes
  */
 async function reserveDBServer (conn, tenantUuid) {
+    /*
     // Update tenantsdbservers with the new tenant
     // Select and update in one sentence to avoid errors and innecessary locks
-    let sql = 'UPDATE tenantsdbservers SET current_databases = current_databases + 1 WHERE id = (' +
-          'SELECT id FROM tenantsdbservers ' +
-          'WHERE current_databases < max_databases AND locked = false ' +
-          'ORDER BY priority ASC LIMIT 1)';
+    // ===> This is not working, the update is not returning the updated row
+    let sql = 'SET @uid := NULL; ' +
+          'UPDATE tenantsdbservers SET current_databases = current_databases + 1 WHERE id = @uid := ( ' +
+          'SELECT * FROM ( ' +
+          '  SELECT id FROM tenantsdbservers ' +
+          '  WHERE current_databases < max_databases AND locked = false ' +
+          '  ORDER BY priority ASC LIMIT 1) ' +
+          ' AS t); ' +
+          'SELECT @uid;';
     const [updateResult] = await conn.execute(sql, []);
     if (updateResult.affectedRows !== 1) {
         logger.error(`tenant.getFreeServerAvailable(): Error finding or updating tenantsdbservers with sql ${sql}`);
@@ -206,8 +197,29 @@ async function reserveDBServer (conn, tenantUuid) {
         logger.error(`tenant.getFreeServerAvailable(): Error finding updated tenantsdbservers with sql ${sql}`);
         return null;
     }
+    */
+
+    // Select and lock the server to increment the current_databases
+    let sql = 'SELECT * FROM tenantsdbservers ' +
+          'WHERE current_databases < max_databases AND locked = false ' +
+          'ORDER BY priority ASC LIMIT 1 ' +
+          'FOR UPDATE';
+    const [serverFound] = await conn.execute(sql, []);
+    if (serverFound.length <= 0) {
+        logger.error(`tenant.getFreeServerAvailable(): Error finding available database in tenantsdbservers with sql ${sql}`);
+        return null;
+    }
+
+    // Updated server
+    sql = 'UPDATE tenantsdbservers SET current_databases = current_databases + 1 WHERE id = ?';
+    const [updatedServer] = await conn.execute(sql, [serverFound[0].id]);
+    if (updatedServer.affectedRows !== 1) {
+        logger.error(`tenant.getFreeServerAvailable(): Error updating tenantsdbservers with sql ${sql}`);
+        return null;
+    }
 
     // Generate a random password
+    // TODO: save the password in a safe plae, the database is not a good place
     const pass = generator.generate({
         length: 20,
         numbers: true,
@@ -221,8 +233,8 @@ async function reserveDBServer (conn, tenantUuid) {
         dbName: `db-${tenantUuid}`,
         dbUsername: `user-${tenantUuid}`,
         dbPassword: pass,
-        dbHost: tenantDbServer[0].db_host,
-        dbPort: tenantDbServer[0].db_port
+        dbHost: serverFound[0].db_host,
+        dbPort: serverFound[0].db_port
     };
 }
 
@@ -235,13 +247,13 @@ async function createActivationLink (conn, tenantUuid, userId) {
         uppercase: true,
         strict: true
     });
-    const activationCodeHashed = await this.hashPassword(activationCode, tenantUuid);
+    const activationCodeHashed = await hashPassword(activationCode);
 
     // Create the link
     const link = `/activate?tenant=${tenantUuid}&user=${userId}&code=${activationCode}`;
 
     // Insert the activation code in the database
-    const sql = 'INSERT INTO activation_codes (user_id, activation_code, created_at, updated_at) VALUES (?, ?, NOW(), NOW())';
+    const sql = 'INSERT INTO activationcodes (user_id, activation_code, created_at, updated_at) VALUES (?, ?, NOW(), NOW())';
     const [insertResult] = await conn.execute(sql, [userId, activationCodeHashed]);
     if (insertResult.affectedRows !== 1) {
         logger.error(`tenant.createActivationLink(): Error inserting activation code with sql ${sql}`);
@@ -250,4 +262,19 @@ async function createActivationLink (conn, tenantUuid, userId) {
 
     // Return the link
     return link;
+}
+
+/**
+     * Function that hashes a password with a salt
+     * @param {*} plainTextPassword
+     * @param {*} saltRounds : Number of rounds to generate the salt
+     * @returns : hashed password
+     */
+async function hashPassword (plainTextPassword, saltRounds) {
+    if (plainTextPassword.length > BCRYPT_PASSWROD_MAX_LENGTH) {
+        throw new Error(`Password too long, bcrypt does not allow passwords longer than ${BCRYPT_PASSWROD_MAX_LENGTH} characters.`);
+    }
+    const salt = await bcrypt.genSalt(saltRounds || BCRYPT_PASSWORD_SALT_ROUNDS);
+    const hash = await bcrypt.hash(plainTextPassword, salt);
+    return hash;
 }

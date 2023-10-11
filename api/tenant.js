@@ -2,6 +2,7 @@
  * Module to manage the tenant and its users
  */
 const bcrypt = require('bcrypt'); // More info: https://en.wikipedia.org/wiki/Bcrypt
+const crypto = require('crypto');
 const database = require('./database');
 const logger = require('./logger');
 const uniqid = require('uniqid');
@@ -219,7 +220,8 @@ async function reserveDBServer (conn, tenantUuid) {
     }
 
     // Generate a random password
-    // TODO: save the password in a safe plae, the database is not a good place
+    // This password needs to be stored in a safe place, the database is not a good place
+    // but for simplicity we store into the DB encrypted with a secret key
     const pass = generator.generate({
         length: 20,
         numbers: true,
@@ -228,14 +230,33 @@ async function reserveDBServer (conn, tenantUuid) {
         strict: true
     });
 
+    // Encrypt the password with a secret key
+    const encryptedPassword = encryptSimetric(process.env.CRYPTO_ALG, process.env.CRYPTO_KEY, process.env.CRYPTO_IV, pass);
+
     // Return tenant object
     return {
         dbName: `db-${tenantUuid}`,
         dbUsername: `user-${tenantUuid}`,
-        dbPassword: pass,
+        dbPassword: encryptedPassword,
         dbHost: serverFound[0].db_host,
         dbPort: serverFound[0].db_port
     };
+}
+
+/*
+function decryptSymetric (algorithm, key, iv, encrypted) {
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+*/
+
+function encryptSimetric (algorithm, key, iv, data) {
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return encrypted;
 }
 
 async function createActivationLink (conn, tenantUuid, userId) {

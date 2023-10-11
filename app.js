@@ -14,6 +14,22 @@ const usersRouter = require('./routes/users');
 // Load .env file to provess.env variables, if the file does not exist does nothing
 require('dotenv').config();
 
+// Check that the mandatory environment variables are set
+if (!process.env.CRYPTO_KEY) {
+    logger.error('CRYPTO_KEY environment variable not set');
+    process.exit(1);
+}
+
+if (!process.env.CRYPTO_IV) {
+    logger.error('CRYPTO_IV environment variable not set');
+    process.exit(1);
+}
+
+if (!process.env.CRYPTO_ALG) {
+    logger.error('CRYPTO_ALG environment variable not set');
+    process.exit(1);
+}
+
 // Connect MySQL
 const db = {
     host: process.env.DB_HOST || 'localhost',

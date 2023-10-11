@@ -108,6 +108,8 @@ module.exports = {
                 throw new Error('Error creating activation link');
             }
 
+            // TODO: send the lik via email
+
             await conn.commit();
             logger.info('tenant.createTenant(): Transaction committed');
 
@@ -128,7 +130,7 @@ async function createOrganizationTenant (conn, tenantUuid, tenant, organization,
     let sql = 'INSERT INTO tenants (uuid, db_name, db_host, db_username, db_password, db_port, created_at, updated_at) ' +
         'VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())';
     const [tenantCreationResult] = await conn.execute(sql,
-        [tenantUuid, tenant.dbName, tenant.dbHost, tenant.dbUsername, tenant.dbPassword, tenant.dbPort]);
+        [tenantUuid, tenant.dbName, tenant.dbHost, tenant.dbUsername, tenant.dbPasswordEncrypted, tenant.dbPort]);
     if (tenantCreationResult.affectedRows !== 1) {
         logger.error(`tenant.createOrganizationTenant(): Error creating tenant ${tenantUuid} with sql ${sql}`);
         return null; // throw new Error(`Error creating tenant ${tenantUuid}`);
@@ -237,7 +239,8 @@ async function reserveDBServer (conn, tenantUuid) {
     return {
         dbName: `db-${tenantUuid}`,
         dbUsername: `user-${tenantUuid}`,
-        dbPassword: encryptedPassword,
+        dbPassword: pass,
+        dbPasswordEncrypted: encryptedPassword,
         dbHost: serverFound[0].db_host,
         dbPort: serverFound[0].db_port
     };

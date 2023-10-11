@@ -71,6 +71,11 @@ router.post('/register', async function (req, res, next) {
 router.get('/activate', function (req, res, next) {
     console.log(`${(new Date()).toISOString()} - [POST]/of/ received ${JSON.stringify(req.query)}`);
     // {"tenant":"2yr1jbwflnggbxcx","user":"1","code":"oLFgy/vM3B-Sk%22:$_q%p"}
+
+    // TODO: check that the activatyion code is valid
+
+    // TODO: create the new database and add to tenantdb object
+
     res.render('activate', { title: 'nu+warehouses' });
 });
 

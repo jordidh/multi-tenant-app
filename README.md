@@ -174,3 +174,28 @@ npm install --save dotenv
 
 Creem el fitxer de configuració `.env` i `env.example`
 
+## Funcionalitat de l'aplicació
+
+Es vol desenvolupar una web [multitenant](https://en.wikipedia.org/wiki/Multitenancy) a on cada tenant tindrà les dades en una base de dades pròpia separada dels altres tenants.
+
+### Escenaris
+
+#### Registre del primer usuari i creació del tenant
+
+Quan es vulgui començar a treballar amb l'aplicació ha de crear un usuari i una organització a la que pertanyerà l'usuari. Per aixo ha de fer:
+
+1. L'usuari (serà l'usuari administrador del tenant) ha de poder registrar-se a la web amb nom d'usuari i contrasenya i indicar a quina organització pertany. Les dades han de ser correctes: el nom d'usuari, email i organització han de ser únics.
+2. Per verificar que l'adreça de correu és vàlida i l'usuari hi té accés s'ha d'enviar un email amb un enllaç amb un codi d'activació amb un temps de validesa limitat.
+3. Quan l'usuari obri el correu i clicki sobre l'enllaç amb el codi d'activació, s'ha de verificar que aquest codi existeix i és vàlid i crear una base de dades específica per aquest tenant (usuari i organització) amb les dades inicials.
+4. El nou usuari ja podrà fer login a l'aplicació i haurà de poder veure les dades particulars de la seva organització.
+
+#### Registre d'usuaris addicionals al tenant
+
+L'usuari administrador del tenant ha de poder donar d'alta nous usuaris (nom d'usuari i email) que puguin accedir a l'organització. Per aixó ha de fer:
+
+1. Accedir a la pantalla de registre d'usuaris.
+2. Prémer sobre el botó de crear un nou usuari.
+3. Introduïr les dades del nou usuari (email i nom d'usuari han de ser únics).
+4. S'enviarà un email d'invitació i activació de l'usuari amb un enllaç a l'aplicació amb una període de validesa limitada..
+5. Quan el nou usuari prémi l'enllaç del email s'activarà l'usuari.
+6. El nou usuari ja podrà fer login a l'aplicació i haurà de poder veure les dades particulars de la seva organització.

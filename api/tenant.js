@@ -2,6 +2,7 @@
  * Module to manage the tenant and its users
  */
 const bcrypt = require('bcrypt'); // More info: https://en.wikipedia.org/wiki/Bcrypt
+const crypto = require('crypto');
 const database = require('./database');
 const logger = require('./logger');
 const uniqid = require('uniqid');
@@ -108,6 +109,8 @@ module.exports = {
                 throw new Error('Error creating activation link');
             }
 
+            // TODO: send the lik via email
+
             await conn.commit();
             logger.info('tenant.createTenant(): Transaction committed');
 
@@ -184,7 +187,7 @@ async function createOrganizationTenant (conn, tenantUuid, tenant, organization,
     let sql = 'INSERT INTO tenants (uuid, db_name, db_host, db_username, db_password, db_port, created_at, updated_at) ' +
         'VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())';
     const [tenantCreationResult] = await conn.execute(sql,
-        [tenantUuid, tenant.dbName, tenant.dbHost, tenant.dbUsername, tenant.dbPassword, tenant.dbPort]);
+        [tenantUuid, tenant.dbName, tenant.dbHost, tenant.dbUsername, tenant.dbPasswordEncrypted, tenant.dbPort]);
     if (tenantCreationResult.affectedRows !== 1) {
         logger.error(`tenant.createOrganizationTenant(): Error creating tenant ${tenantUuid} with sql ${sql}`);
         return null; // throw new Error(`Error creating tenant ${tenantUuid}`);
@@ -276,7 +279,8 @@ async function reserveDBServer (conn, tenantUuid) {
     }
 
     // Generate a random password
-    // TODO: save the password in a safe plae, the database is not a good place
+    // This password needs to be stored in a safe place, the database is not a good place
+    // but for simplicity we store into the DB encrypted with a secret key
     const pass = generator.generate({
         length: 20,
         numbers: true,
@@ -285,14 +289,34 @@ async function reserveDBServer (conn, tenantUuid) {
         strict: true
     });
 
+    // Encrypt the password with a secret key
+    const encryptedPassword = encryptSimetric(process.env.CRYPTO_ALG, process.env.CRYPTO_KEY, process.env.CRYPTO_IV, pass);
+
     // Return tenant object
     return {
         dbName: `db-${tenantUuid}`,
         dbUsername: `user-${tenantUuid}`,
         dbPassword: pass,
+        dbPasswordEncrypted: encryptedPassword,
         dbHost: serverFound[0].db_host,
         dbPort: serverFound[0].db_port
     };
+}
+
+/*
+function decryptSymetric (algorithm, key, iv, encrypted) {
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+*/
+
+function encryptSimetric (algorithm, key, iv, data) {
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return encrypted;
 }
 
 async function createActivationLink (conn, tenantUuid, userId) {

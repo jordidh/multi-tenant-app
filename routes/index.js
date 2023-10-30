@@ -14,6 +14,7 @@ router.get('/login', function (req, res, next) {
 router.post('/login', function (req, res, next) {
     console.log(`${(new Date()).toISOString()} - [POST]/of/ received ${JSON.stringify(req.body)}`);
     // {"username":"","user":"","submitCode":"Login"}
+
     res.render('login', { title: 'nu+warehouses' });
 });
 
@@ -68,15 +69,23 @@ router.post('/register', async function (req, res, next) {
     res.render('activate', { activationLink: creationResult.data.activationLink });
 });
 
-router.get('/activate', function (req, res, next) {
-    console.log(`${(new Date()).toISOString()} - [POST]/of/ received ${JSON.stringify(req.query)}`);
-    // {"tenant":"2yr1jbwflnggbxcx","user":"1","code":"oLFgy/vM3B-Sk%22:$_q%p"}
-
-    // TODO: check that the activatyion code is valid
-
-    // TODO: create the new database and add to tenantdb object
-
-    res.render('activate', { title: 'nu+warehouses' });
+router.get('/activate', async function (req, res, next) {
+    try {
+        if (req.query.tenant && req.query.user && req.query.code) {
+            const userActivation = await tenant.activateAccount(req.query.tenant, req.query.user, req.query.code);
+            if (userActivation) {
+                res.render('login', { title: 'nu+warehouses', activated: true });
+            } else {
+                throw new Error('Error during activation');
+            }
+        } else {
+            throw new Error('No activation link in the URL');
+        }
+    } catch (e) {
+        console.log(`${new Date().toISOString()} - [POST]/of/ received ${JSON.stringify(req.query)}`);
+        // {"tenant":"2yr1jbwflnggbxcx","user":"1","code":"oLFgy/vM3B-Sk%22:$_q%p"}
+        res.render('activate', { title: 'nu+warehouses' });
+    }
 });
 
 router.get('/account', function (req, res, next) {

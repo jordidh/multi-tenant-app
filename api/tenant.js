@@ -9,6 +9,8 @@ const uniqid = require('uniqid');
 const generator = require('generate-password');
 const ApiResult = require('./ApiResult');
 const ApiError = require('./ApiError');
+const tenantdb = require('./tenantdb');
+const mysql = require('mysql2');
 
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 const BCRYPT_PASSWROD_MAX_LENGTH = 72;
@@ -89,7 +91,6 @@ module.exports = {
 
             // Hash the user password with a salt
             const hashedPassword = await hashPassword(user.password1);
-
             // Get a free tenant db server
             const tenantDb = await reserveDBServer(conn, tenantUuid);
             if (!tenantDb) {
@@ -122,6 +123,62 @@ module.exports = {
             const error = new ApiError('REG01', e.message, '', '');
             return new ApiResult(500, 'Error creating tenant', 1, [error]);
         }
+    },
+    activateAccount: async function (tenant, user, code) {
+        const conn = await database.getPromisePool().getConnection();
+        try {
+            await conn.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            await conn.beginTransaction();
+
+            let sql = 'SELECT activation_code FROM activationcodes WHERE user_id = ? AND valid = 1';
+            const [aCodeExists] = await conn.query(sql, [user]);
+
+            if (aCodeExists && aCodeExists.length > 0) {
+                const activationCodeHashed = await bcrypt.compare(code, aCodeExists[0].activation_code);
+                if (activationCodeHashed) {
+                    sql = 'UPDATE users SET locked = false WHERE id = ?';
+                    await conn.execute(sql, [user]);
+                    /* if (!activatedUser) {
+                        throw new Error('Error activating user');
+                    } */
+
+                    sql = 'UPDATE activationcodes SET valid = false WHERE activation_code LIKE ?';
+                    const [invalidateLink] = await conn.execute(sql, [aCodeExists[0].activation_code]);
+                    if (!invalidateLink) {
+                        throw new Error('Error invalidating activation link');
+                    }
+
+                    await conn.commit();
+
+                    // CREATE Tenant
+                    sql = 'SELECT t.* FROM tenants t JOIN organizations o ON t.id = o.tenant_id JOIN users u ON o.id = u.organization_id WHERE u.id = ?';
+                    const [userTenantData] = await conn.execute(sql, [user]);
+
+                    const userDb = await createUserDB(user, userTenantData[0].uuid, conn);
+                    if (!userDb) {
+                        throw new Error('Error creating user database');
+                    }
+
+                    // addConnection
+                    tenantdb.addConnection(userTenantData[0]);
+                    return new ApiResult(200, '', 1, []);
+                } else {
+                    throw new Error('Error activation code not found or invalid');
+                }
+            } else {
+                throw new Error('Activation code not found or not valid');
+            }
+        } catch (e) {
+            logger.error(`tenant.activateAccount: Error activating user: ${e}`);
+            await conn.rollback();
+            logger.info('tenant.activateAccount(): Transaction rolled back');
+            const error = new ApiError('REG01', e.message, '', '');
+            return new ApiResult(500, 'Error during the activation process', 1, [error]);
+        }
+    },
+
+    loginDb: async function (user, passwd) {
+        // TODO: login into user db
     }
 };
 
@@ -267,14 +324,15 @@ async function createActivationLink (conn, tenantUuid, userId) {
     const activationCode = generator.generate({
         length: 20,
         numbers: true,
-        symbols: true,
+        // Set symbols to false to avoid have &, that will generate a new query to req
+        symbols: false,
         uppercase: true,
         strict: true
     });
-    const activationCodeHashed = await hashPassword(activationCode);
 
+    const activationCodeHashed = await hashPassword(activationCode);
     // Create the link
-    const link = `/activate?tenant=${tenantUuid}&user=${userId}&code=${activationCode}`;
+    const link = encodeURI(`/activate?tenant=${tenantUuid}&user=${userId}&code=${activationCode}`);
 
     // Insert the activation code in the database
     const sql = 'INSERT INTO activationcodes (user_id, activation_code, created_at, updated_at) VALUES (?, ?, NOW(), NOW())';
@@ -301,4 +359,56 @@ async function hashPassword (plainTextPassword, saltRounds) {
     const salt = await bcrypt.genSalt(saltRounds || BCRYPT_PASSWORD_SALT_ROUNDS);
     const hash = await bcrypt.hash(plainTextPassword, salt);
     return hash;
+}
+
+async function createUserDB (user, uuid) {
+    try {
+        // Connection to mysql db
+        const connToMySql = await mysql.createPool({
+            host: process.env.DB_HOST || 'localhost',
+            port: process.env.DB_PORT || 3306,
+            user: process.env.DB_USER || 'cbwms',
+            password: process.env.DB_PASSWORD || '1qaz2wsx',
+            database: 'mysql'
+        });
+        // Promise to
+        let conn = connToMySql.promise();
+
+        // Create the new DB
+        const dbCreated = await conn.execute(`CREATE DATABASE IF NOT EXISTS DB_USER_${user};`);
+        if (dbCreated.length !== 2) throw new Error('User db not created');
+
+        // Connection to new DB
+        const connToUserDB = await mysql.createPool({
+            host: process.env.DB_HOST || 'localhost',
+            port: process.env.DB_PORT || 3306,
+            user: process.env.DB_USER || 'cbwms',
+            password: process.env.DB_PASSWORD || '1qaz2wsx',
+            database: `DB_USER_${user}`
+        });
+        // Change promise to the new DB connection
+        conn = connToUserDB.promise();
+
+        // Create the user_groups table
+        const tableGroupCreated = await conn.execute('CREATE TABLE IF NOT EXISTS user_groups(id SERIAL PRIMARY KEY, group_name VARCHAR(255) UNIQUE NOT NULL);');
+        if (tableGroupCreated.length !== 2) throw new Error('Groups table not created');
+
+        // Create the users table
+        const tableUserCreated = await conn.execute('CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, tenant_uuid VARCHAR(255) UNIQUE NOT NULL, group_id BIGINT UNSIGNED NOT NULL, FOREIGN KEY (tenant_uuid) REFERENCES tenants_app.tenants(uuid), FOREIGN KEY (group_id) REFERENCES user_groups(id));');
+        if (tableUserCreated.length !== 2) throw new Error('Users table not created');
+
+        // Insert initial data into user_groups
+        const insertIntoGroup = await conn.execute('INSERT INTO user_groups (group_name) VALUES (\'admin\');');
+        if (insertIntoGroup.length !== 2) throw new Error('Couldn\'t insert values into groups');
+
+        // Insert user activated into users with the group admin
+        const insertIntoUser = await conn.execute(`INSERT INTO users (tenant_uuid, group_id) VALUES ('${uuid}', 1);`);
+        if (insertIntoUser.length !== 2) throw new Error('Couldn\'t insert values into users');
+
+        // console.log("Database and tables successfully created.");
+        return true;
+    } catch (error) {
+        console.error('Error creating database and tables:', error);
+        return false;
+    }
 }

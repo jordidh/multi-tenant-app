@@ -4,25 +4,10 @@ CREATE DATABASE tenants_app;
 
 USE tenants_app;
 
--- Table to store tenants and their databases
-CREATE TABLE `tenants` (
-    `id` SERIAL PRIMARY KEY,
-    `uuid` VARCHAR(255) UNIQUE NOT NULL,
-    `db_name` VARCHAR(100) UNIQUE NOT NULL,
-    `db_host` VARCHAR(255) NOT NULL,
-    `db_username` VARCHAR(100),
-    `db_password` TEXT,
-    `db_port` INTEGER,
-    `created_at` TIMESTAMP DEFAULT NOW(),
-    `updated_at` TIMESTAMP DEFAULT NOW(),
-    INDEX uuid_index (`uuid`),
-    UNIQUE name_host_index (`db_name`, `db_host`)
-);
-
 -- Table with all the servers available to create new databases
 CREATE TABLE `tenantsdbservers` (
     `id` SERIAL PRIMARY KEY,
-    `db_host` VARCHAR(255),
+    `db_host` VARCHAR(255) UNIQUE NOT NULL,
     `db_port` INTEGER,
     `max_databases` INTEGER,
     `current_databases` INTEGER,
@@ -35,6 +20,22 @@ CREATE TABLE `tenantsdbservers` (
 INSERT INTO `tenantsdbservers` VALUES
 (1, 'localhost', 3306, 100, 0, false, 1, NOW(), NOW()),
 (2, '192.168.1.251', 3306, 100, 0, false, 2, NOW(), NOW());
+
+-- Table to store ten	ants and their databases
+CREATE TABLE `tenants` (
+    `id` SERIAL PRIMARY KEY,
+    `uuid` VARCHAR(255) UNIQUE NOT NULL,
+    `db_name` VARCHAR(100) UNIQUE NOT NULL,
+    `db_host` VARCHAR(255) NOT NULL,
+    `db_username` VARCHAR(100),
+    `db_password` TEXT,
+    `db_port` INTEGER,
+    `created_at` TIMESTAMP DEFAULT NOW(),
+    `updated_at` TIMESTAMP DEFAULT NOW(),
+    INDEX uuid_index (`uuid`),
+    UNIQUE name_host_index (`db_name`, `db_host`),
+    FOREIGN KEY (db_host) REFERENCES tenantsdbservers(db_host)
+);
 
 -- Table with the tenant organization
 CREATE TABLE `organizations` (
@@ -53,7 +54,7 @@ CREATE TABLE `organizations` (
 );
 
 -- Table with the tenant users
-CREATE TABLE `users` (
+CREATE TABLE `users`(
     `id` SERIAL PRIMARY KEY,
     `first_name` VARCHAR(255) NOT NULL,
     `last_name` VARCHAR(255) NOT NULL,
@@ -82,3 +83,4 @@ CREATE TABLE `activationcodes` (
     INDEX activation_code_index (`activation_code`),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+

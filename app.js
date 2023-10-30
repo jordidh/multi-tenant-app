@@ -11,6 +11,9 @@ const uniqid = require('uniqid');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
+/* const nodemailer = require("nodemailer");
+var transporter=null; */
+
 // Load .env file to provess.env variables, if the file does not exist does nothing
 require('dotenv').config();
 
@@ -119,5 +122,28 @@ app.use(function (err, req, res, next) {
 });
 
 logger.info(`Node environment = ${(process.env.NODE_ENV ? process.env.NODE_ENV : 'development')}`);
+
+/* (async () => {
+    transporter = await nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            type: 'OAuth2',
+            user: process.env.MAIL_USERNAME,
+            pass: process.env.MAIL_PASSWORD,
+            clientId: process.env.OAUTH_CLIENTID,
+            clientSecret: process.env.OAUTH_CLIENT_SECRET,
+            refreshToken: process.env.OAUTH_REFRESH_TOKEN
+        }
+    });
+    const info = await transporter.sendMail({
+        from: 'arcedo.marc@gmail.com', // sender address
+        to: "jordi@codebiting.com", // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: "Hello world?", // plain text body
+        html: "<b>Hello world?</b>", // html body
+    });
+})().catch(e => {
+    console.error(e.message);
+}); */
 
 module.exports = app;

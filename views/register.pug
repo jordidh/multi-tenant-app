@@ -1,6 +1,7 @@
 extends layout
 
 block content
+    
     nav
         ul
             li
@@ -11,10 +12,13 @@ block content
                 a(href='#') Prices
             li
                 a.leftspace(href='/login') Identify
-
     .container
         .column-left 
-            form(action='/register' method='post')
+            if message
+                if message.type == 'error'
+                    div#errorbox(style=`visibility: visible;`, onclick='hide()')= message.text
+            div#errorbox2(onclick='hide()')
+            form(action='/register' method='post' onsubmit=`return validateRegister('${patternPassword}', '${PASSNOTEQUAL}', '${ERRORPATTERNPASS}')` name='registerForm' )
                 label(for='firstname') First name:
                 input#fname(type='text' name='firstname' value='' autofocus required='' minlength='3' maxlength='100')
                 br
@@ -24,6 +28,9 @@ block content
                 label(for='username') User name:
                 input#fname(type='text' name='username' value='' required='' minlength='8' maxlength='100')
                 br
+                div#circle
+                    div#info-icon i
+                    div#popup Password must have: 8 characters, one lowercase letter, one uppercase letter, one digit and one character: @$!%*#?&^
                 label(for='password1') Password:
                 input#user(type='password' name='password1' value=user required='' minlength='8' maxlength='72')
                 br
@@ -54,7 +61,7 @@ block content
                 br
                 hr
                 br
-                input#submitof(name="submitCode" type='submit' value='Register' style='width: 20%;')
+                input#submitof(name="submitCode" type='submit' value='Register' style='width: 40%;')
         .column-image
             img(src='images/homepage-desktop.png' alt='Image 1')
     .section-gray

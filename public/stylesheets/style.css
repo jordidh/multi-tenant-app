@@ -221,3 +221,52 @@ input[type=text] {
     font: 24px "Lucida Grande", Helvetica, Arial, sans-serif;
     border-radius: 4px;
   }
+
+  #errorbox, #errorbox2 {
+    visibility: hidden;
+    position: absolute;
+    width: 500px;
+    top: 75px;
+    font-size: 15px;
+    border: red solid 1px;
+    border-radius: 12px;
+    padding: 10px;
+    background-color: #fcc;
+  }
+
+  #circle {
+    position: absolute;
+    left: 80px;
+    width: 20px;
+    height: 20px;
+    background-color: #3498db;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  #info-icon {
+    font-size: 16px;
+    color: #fff;
+  }
+  
+  #popup {
+    position: absolute;
+    left: 25px;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 5px;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.3s, opacity 0.3s;
+  }
+  
+  #circle:hover #popup {
+    visibility: visible;
+    opacity: 1;
+  }

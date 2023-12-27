@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const tenant = require('../api/tenant');
+const logger = require('../api/logger');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -19,7 +20,7 @@ router.post('/login', function (req, res, next) {
 });
 
 router.get('/register', function (req, res, next) {
-    res.render('register', { title: 'nu+warehouses' });
+    res.render('register', { title: 'nu+warehouses', patternPassword: tenant.PATTERN_PASSWORD });
 });
 
 /**
@@ -34,12 +35,14 @@ router.post('/register', async function (req, res, next) {
 
     // Check passwords are equal
     if (req.body.password1 !== req.body.password2) {
-        res.render('error', { message: 'Passwords are not equal', error: {} });
+        logger.error('Password error');
+        res.render('register', { show: 'visible', message: { type: 'error', text: 'Passwords are not equal' } });
         return;
     }
     // Check passwords match minimum requirements
     if (tenant.isValidPassword(req.body.password1) === false) {
-        res.render('error', { message: 'Password do not match minimum strength requirements', error: {} });
+        logger.error('Password error');
+        res.render('register', { show: 'visible', message: { type: 'error', text: 'Error the password must have: 8 characters, one lowercase letter, one uppercase letter, one digit and one character: @$!%*#?&^' } });
         return;
     }
 

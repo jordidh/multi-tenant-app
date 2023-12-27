@@ -14,36 +14,30 @@ const mysql = require('mysql2');
 
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 const BCRYPT_PASSWROD_MAX_LENGTH = 72;
+const PATTERN_PASSWORD = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&^])[A-Za-z\\d@$!%*#?&^]{8,}$';
+/* PATTERN_PASSWORD : regular expression pattern to validate the password
+     *  - Example for a password with minumim one letter, one digit and a minimum length of 8 characters: ^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$
+     *    Explanation:
+     *     ^ asserts the start of the string.
+     *     (?=.*[A-Z]) is a positive lookahead assertion that requires at least one uppercase letter (A-Z).
+     *     (?=.*[a-z]) is a positive lookahead assertion that requires at least one lowercase letter (a-z).
+     *     (?=.*\d) is a positive lookahead assertion that requires at least one digit (0-9).
+     *     (?=.*[@$!%*#?&^]) is another positive lookahead assertion that requires at least one special character (@$!%*#?&^).
+     *     [A-Za-z\\d@$!%*#?&^]{8,} matches any combination of uppercase letters, lowercase letters, digits and special characters with a minimum length of 8 characters.
+     *     $ asserts the end of the string.
+     */
 
 module.exports = {
+
+    PATTERN_PASSWORD,
 
     /**
      * Method that validates that a password respects the RegExp pattern
      * @param {*} plainTextPassword
-     * @param {*} pattern : regular expression pattern to validate the password
-     *  - Example for a password with minumim one letter, one digit and a minimum length of 8 characters: ^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$
-     *    Explanation:
-     *     ^ asserts the start of the string.
-     *     (?=.*[A-Z]) is a positive lookahead assertion that requires at least one letter (A-Za-z).
-     *     (?=.*\d) is another positive lookahead assertion that requires at least one digit (0-9).
-     *     [A-Za-z\d]{8,} matches any combination of uppercase letters, lowercase letters, and digits with a minimum length of 8 characters.
-     *     $ asserts the end of the string.
-     *    Other regexp:
-     *     Minimum eight characters, at least one letter and one number:
-     *     "^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
-     *     Minimum eight characters, at least one letter, one number and one special character:
-     *     "^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
-     *     Minimum eight characters, at least one uppercase letter, one lowercase letter and one number:
-     *     "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$"
-     *     Minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character:
-     *     "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-     *     Minimum eight and maximum 10 characters, at least one uppercase letter, one lowercase letter, one number and one special character:
-     *     "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$"
      * @returns : true if the password is valid, false otherwise
      */
-    isValidPassword: function (plainTextPassword, pattern) {
-        pattern = pattern || '^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&^])[A-Za-z\\d@$!%*#?&^]{8,}$';
-        const matchResults = plainTextPassword.match(pattern);
+    isValidPassword: function (plainTextPassword) {
+        const matchResults = plainTextPassword.match(PATTERN_PASSWORD);
         return (matchResults !== null);
     },
 

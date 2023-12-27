@@ -20,7 +20,7 @@ router.post('/login', function (req, res, next) {
 });
 
 router.get('/register', function (req, res, next) {
-    res.render('register', { title: 'nu+warehouses', patternPassword: tenant.PATTERN_PASSWORD });
+    res.render('register', { title: 'nu+warehouses', patternPassword: tenant.PATTERN_PASSWORD, PASSNOTEQUAL: tenant.PASSNOTEQUAL, ERRORPATTERNPASS: tenant.ERRORPATTERNPASS });
 });
 
 /**
@@ -36,13 +36,13 @@ router.post('/register', async function (req, res, next) {
     // Check passwords are equal
     if (req.body.password1 !== req.body.password2) {
         logger.error('Password error');
-        res.render('register', { show: 'visible', message: { type: 'error', text: 'Passwords are not equal' } });
+        res.render('register', { show: 'visible', message: { type: 'error', text: tenant.PASSNOTEQUAL } });
         return;
     }
     // Check passwords match minimum requirements
     if (tenant.isValidPassword(req.body.password1) === false) {
         logger.error('Password error');
-        res.render('register', { show: 'visible', message: { type: 'error', text: 'Error the password must have: 8 characters, one lowercase letter, one uppercase letter, one digit and one character: @$!%*#?&^' } });
+        res.render('register', { show: 'visible', message: { type: 'error', text: tenant.ERRORPATTERNPASS } });
         return;
     }
 

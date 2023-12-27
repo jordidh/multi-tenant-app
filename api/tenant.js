@@ -14,6 +14,8 @@ const mysql = require('mysql2');
 
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 const BCRYPT_PASSWROD_MAX_LENGTH = 72;
+const PASSNOTEQUAL = 'Passwords are not equal.';
+const ERRORPATTERNPASS = 'Error the password must have: 8 characters, one lowercase letter, one uppercase letter, one digit and one character: @$!%*#?&^';
 const PATTERN_PASSWORD = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&^])[A-Za-z\\d@$!%*#?&^]{8,}$';
 /* PATTERN_PASSWORD : regular expression pattern to validate the password
      *  - Example for a password with minumim one letter, one digit and a minimum length of 8 characters: ^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$
@@ -30,7 +32,8 @@ const PATTERN_PASSWORD = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&^])[A-Za
 module.exports = {
 
     PATTERN_PASSWORD,
-
+    PASSNOTEQUAL,
+    ERRORPATTERNPASS,
     /**
      * Method that validates that a password respects the RegExp pattern
      * @param {*} plainTextPassword

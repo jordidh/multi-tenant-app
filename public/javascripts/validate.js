@@ -5,20 +5,20 @@
  * returns false if it doesn't pass and true if it passes.
  */
 // eslint-disable-next-line no-unused-vars
-function validateRegister (patternPassword) {
+function validateRegister (patternPassword, PASSNOTEQUAL, ERRORPATTERNPASS) {
     const REG_EXP_PASSWORD = new RegExp(patternPassword);
-    const ERRORBOX = document.getElementById('errorbox2');
-    const PASSWORD = document.forms.registerForm.password1.value;
-    const PASSWORD2 = document.forms.registerForm.password2.value;
+    const errorBox = document.getElementById('errorbox2');
+    const passwordValue = document.forms.registerForm.password1.value;
+    const passwordValue2 = document.forms.registerForm.password2.value;
 
-    if (PASSWORD !== PASSWORD2) {
-        ERRORBOX.innerHTML = 'Passwords are not equal';
-        ERRORBOX.style.visibility = 'visible';
+    if (passwordValue !== passwordValue2) {
+        errorBox.innerHTML = PASSNOTEQUAL;
+        errorBox.style.visibility = 'visible';
         scrollToTop();
         return false;
-    } else if (!REG_EXP_PASSWORD.test(PASSWORD)) {
-        ERRORBOX.innerHTML = 'Error the password must have: 8 characters, one lowercase letter, one uppercase letter, one digit and one character: @$!%*#?&^';
-        ERRORBOX.style.visibility = 'visible';
+    } else if (!REG_EXP_PASSWORD.test(passwordValue)) {
+        errorBox.innerHTML = ERRORPATTERNPASS;
+        errorBox.style.visibility = 'visible';
         scrollToTop();
         return false;
     }
@@ -33,13 +33,13 @@ function scrollToTop () {
 }
 // eslint-disable-next-line no-unused-vars
 function hide () {
-    const ERRORBOX = document.getElementById('errorbox');
-    const ERRORBOX2 = document.getElementById('errorbox2');
+    const errorBox = document.getElementById('errorbox');
+    const errorBox2 = document.getElementById('errorbox2');
 
-    if (ERRORBOX) {
-        ERRORBOX.style.visibility = 'hidden';
+    if (errorBox) {
+        errorBox.style.visibility = 'hidden';
     }
-    if (ERRORBOX2) {
-        ERRORBOX2.style.visibility = 'hidden';
+    if (errorBox2) {
+        errorBox2.style.visibility = 'hidden';
     }
 }

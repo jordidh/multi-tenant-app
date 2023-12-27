@@ -7,10 +7,11 @@
     "test": "node ./node_modules/mocha/bin/mocha",
     "test-apis": "node ./node_modules/mocha/bin/mocha ./test/api/",
     "test-routes": "node ./bin/www & P1=$! && sleep 2 && node ./node_modules/mocha/bin/mocha ./test/routes/v1/ && kill $P1",
-    "test-eslint": "node ./node_modules/.bin/eslint app.js bin/www routes/*.js api/*.js"
+    "test-eslint": "node ./node_modules/.bin/eslint app.js bin/www routes/*.js api/*.js",
+    "test-eslint-windows": "eslint app.js bin/www routes/*.js api/*.js"
   },
   "pre-commit": [
-    "test-eslint"
+    "test-eslint-windows"
   ],
   "dependencies": {
     "bcrypt": "^5.1.1",

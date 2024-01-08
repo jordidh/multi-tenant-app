@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const tenant = require('../api/tenant');
 const logger = require('../api/logger');
+// Load .env file to process.env variables
+require('dotenv').config();
+const mailchimpClient = require('@mailchimp/mailchimp_transactional')(process.env.MANDRILL_KEY);
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -20,7 +23,7 @@ router.post('/login', function (req, res, next) {
 });
 
 router.get('/register', function (req, res, next) {
-    res.render('register', { title: 'nu+warehouses', patternPassword: tenant.PATTERN_PASSWORD, PASSNOTEQUAL: tenant.PASSNOTEQUAL, ERRORPATTERNPASS: tenant.ERRORPATTERNPASS });
+    res.render('register', { title: 'nu+warehouses', PATTERN_PASSWORD: tenant.PATTERN_PASSWORD, PASSNOTEQUAL: tenant.PASSNOTEQUAL, ERRORPATTERNPASS: tenant.ERRORPATTERNPASS });
 });
 
 /**
@@ -35,13 +38,13 @@ router.post('/register', async function (req, res, next) {
 
     // Check passwords are equal
     if (req.body.password1 !== req.body.password2) {
-        logger.error('Password error');
+        logger.error(tenant.PASSNOTEQUAL);
         res.render('register', { show: 'visible', message: { type: 'error', text: tenant.PASSNOTEQUAL } });
         return;
     }
     // Check passwords match minimum requirements
     if (tenant.isValidPassword(req.body.password1) === false) {
-        logger.error('Password error');
+        logger.error(tenant.ERRORPATTERNPASS);
         res.render('register', { show: 'visible', message: { type: 'error', text: tenant.ERRORPATTERNPASS } });
         return;
     }
@@ -63,13 +66,34 @@ router.post('/register', async function (req, res, next) {
         email: req.body.email
     };
 
+    // Creation of the activation link
     const creationResult = await tenant.createTenant(organization, user);
     if (creationResult.errors && creationResult.errors.length > 0) {
-        res.render('error', { message: `${creationResult.data}: ${creationResult.errors[0].message}`, error: {} });
+        res.render('register', { show: 'visible', message: { type: 'error', text: `${creationResult.data}: ${creationResult.errors[0].message}` } });
         return;
     }
+    console.log('Link d"activació:' + creationResult.data.activationLink);
 
-    res.render('activate', { activationLink: creationResult.data.activationLink });
+    // mailchimp message structure to send the activation link to the user mail.
+    const response = await mailchimpClient.messages.send({
+        message: {
+            subject: 'Activate your account',
+            html: `<h2>Click on the link below to activate your account</h2>
+                    <p><a href="http://localhost:3000${creationResult.data.activationLink}">
+                    Click here to activate your account</a></p>`,
+            from_email: 'support@codebiting.com',
+            to: [{
+                email: user.email
+            }
+            ]
+        }
+    });
+    console.log(response);
+    if (response && response.response && response.response.status !== 200) {
+        res.render('register', { message: { type: 'error', text: `${response.response.statusText}` } });
+    } else {
+        res.render('activate', { userEmail: user.email });
+    }
 });
 
 router.get('/activate', async function (req, res, next) {

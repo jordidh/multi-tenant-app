@@ -222,16 +222,24 @@ input[type=text] {
     border-radius: 4px;
   }
 
-  #errorbox, #errorbox2 {
+  #errorbox, #errorbox2, #success {
     visibility: hidden;
     position: absolute;
     width: 500px;
     top: 75px;
     font-size: 15px;
-    border: red solid 1px;
     border-radius: 12px;
     padding: 10px;
+  }
+
+  #errorbox, #errorbox2 {
+    border: red solid 1px;
     background-color: #fcc;
+  }
+
+  #success {
+    border: green solid 1px;
+    background-color: rgb(209, 255, 218);
   }
 
   #circle {

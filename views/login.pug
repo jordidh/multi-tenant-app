@@ -11,11 +11,11 @@ block content
                 a(href='#') Prices
             li
                 a.leftspace(href='/register') Register
-    if (activated)
-         div().alert.info
-            strong Your account has been activated and the organization data base created;
     .container
         .column-left 
+            if (activated)
+                div#success(style=`visibility: visible;`, onclick='hide()')
+                    strong Your account has been activated and the organization data base created.
             h2 nu+warehouse
             form(action='/login' method='post')
                 label(for='username') User name:

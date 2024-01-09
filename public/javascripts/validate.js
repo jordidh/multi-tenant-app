@@ -5,8 +5,7 @@
  * returns false if it doesn't pass and true if it passes.
  */
 // eslint-disable-next-line no-unused-vars
-function validateRegister (patternPassword, PASSNOTEQUAL, ERRORPATTERNPASS) {
-    const REG_EXP_PASSWORD = new RegExp(patternPassword);
+function validateRegister (PATTERN_PASSWORD, PASSNOTEQUAL, ERRORPATTERNPASS) {
     const errorBox = document.getElementById('errorbox2');
     const passwordValue = document.forms.registerForm.password1.value;
     const passwordValue2 = document.forms.registerForm.password2.value;
@@ -16,7 +15,7 @@ function validateRegister (patternPassword, PASSNOTEQUAL, ERRORPATTERNPASS) {
         errorBox.style.visibility = 'visible';
         scrollToTop();
         return false;
-    } else if (!REG_EXP_PASSWORD.test(passwordValue)) {
+    } else if (!PATTERN_PASSWORD.test(passwordValue)) {
         errorBox.innerHTML = ERRORPATTERNPASS;
         errorBox.style.visibility = 'visible';
         scrollToTop();
@@ -35,11 +34,15 @@ function scrollToTop () {
 function hide () {
     const errorBox = document.getElementById('errorbox');
     const errorBox2 = document.getElementById('errorbox2');
+    const success = document.getElementById('success');
 
     if (errorBox) {
         errorBox.style.visibility = 'hidden';
     }
     if (errorBox2) {
         errorBox2.style.visibility = 'hidden';
+    }
+    if (success) {
+        success.style.visibility = 'hidden';
     }
 }

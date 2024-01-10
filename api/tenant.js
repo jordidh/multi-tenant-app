@@ -11,7 +11,10 @@ const ApiResult = require('./ApiResult');
 const ApiError = require('./ApiError');
 const tenantdb = require('./tenantdb');
 const mysql = require('mysql2');
+const fs = require('fs');
 
+// 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
+const TENANTSCRIPT = fs.readFileSync('scripts/db/db_tenant.sql', 'utf8');
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 const BCRYPT_PASSWROD_MAX_LENGTH = 72;
 const PASSNOTEQUAL = 'Passwords are not equal.';
@@ -386,23 +389,28 @@ async function createUserDB (user, uuid) {
         // Change promise to the new DB connection
         conn = connToUserDB.promise();
 
-        // Create the user_groups table
-        const tableGroupCreated = await conn.execute('CREATE TABLE IF NOT EXISTS user_groups(id SERIAL PRIMARY KEY, group_name VARCHAR(255) UNIQUE NOT NULL);');
-        if (tableGroupCreated.length !== 2) throw new Error('Groups table not created');
+        /**
+         * TENANTSCRIPT contains all the queries inside a single String, but the 'execute' method only accepts one query at a time.
+         * Therefore, we need to create an Array using 'split' with ';' as the separator.
+         * 'queries' is an Array containing all the queries, but some positions can be occupied with '', which we can fix using 'trim'.
+         * 'filter' creates an Array with the Strings that meet the condition (having other characters after deleting white spaces with trim).
+         * The loop 'for' serves to iterate every query as a single string.
+         * */
+        const queries = TENANTSCRIPT.split(';');
+        const validQueries = queries.filter(query => query.trim() !== '');
+        let tablesTenant;
+        for (const query of validQueries) {
+            tablesTenant = await conn.execute(query);
+            if (tablesTenant.length !== 2) throw new Error(`Tenant tables not created, executing query ${query}`);
+        }
 
-        // Create the users table
-        const tableUserCreated = await conn.execute('CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, tenant_uuid VARCHAR(255) UNIQUE NOT NULL, group_id BIGINT UNSIGNED NOT NULL, FOREIGN KEY (tenant_uuid) REFERENCES tenants_app.tenants(uuid), FOREIGN KEY (group_id) REFERENCES user_groups(id));');
-        if (tableUserCreated.length !== 2) throw new Error('Users table not created');
+        // Insert initial data into location
+        const insertIntoLocation = await conn.execute("INSERT INTO location (code, description) VALUES ('UBIC01' ,'descripcio de prova');");
+        if (insertIntoLocation.length !== 2 || insertIntoLocation[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into location');
+        }
 
-        // Insert initial data into user_groups
-        const insertIntoGroup = await conn.execute('INSERT INTO user_groups (group_name) VALUES (\'admin\');');
-        if (insertIntoGroup.length !== 2) throw new Error('Couldn\'t insert values into groups');
-
-        // Insert user activated into users with the group admin
-        const insertIntoUser = await conn.execute(`INSERT INTO users (tenant_uuid, group_id) VALUES ('${uuid}', 1);`);
-        if (insertIntoUser.length !== 2) throw new Error('Couldn\'t insert values into users');
-
-        // console.log("Database and tables successfully created.");
+        console.log('Database and tables successfully created.');
         return true;
     } catch (error) {
         console.error('Error creating database and tables:', error);

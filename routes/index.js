@@ -81,7 +81,7 @@ router.post('/register', async function (req, res, next) {
             html: `<h2>Click on the link below to activate your account</h2>
                     <p><a href="http://localhost:3000${creationResult.data.activationLink}">
                     Click here to activate your account</a></p>`,
-            from_email: 'support@codebiting.com',
+            from_email: 'alvaro@ranacuajo.com',
             to: [{
                 email: user.email
             }

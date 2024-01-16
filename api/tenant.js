@@ -173,38 +173,33 @@ module.exports = {
             // Verify the introduced user name in the db
             const sql = 'SELECT id, user_name, password FROM users WHERE user_name= ? ';
             const resultQuery = await conn.execute(sql, [user]);
-            if (resultQuery.length !== 2 || resultQuery[0].length === 0) throw new Error('Select id, user_name, password was not successful');
-
-            const usernamedb = resultQuery[0][0].user_name;
-            if (usernamedb !== user) {
-                console.log('The username does not exist.');
-            }
+            if (resultQuery.length !== 2 || resultQuery[0].length === 0) throw new Error('Username not found.');
 
             // Verify the introduced password in the db
             const passworddb = resultQuery[0][0].password;
             if (await comparePasswords(passwd, passworddb) === false) {
-                console.log('Password does not match with the username.');
+                throw new Error('Password does not match with the username.');
             }
 
             // Get the user id to later connect the database
             userId = resultQuery[0][0].id;
             console.log('User verification successful');
+            // return new ApiResult(200, { message: 'User verification successful.' }, 1, []);
         } catch (e) {
             logger.error(`tenant.login(): Error logging user: ${e}`);
             logger.info('tenant.login(): Transaction rolled back');
             const error = new ApiError('REG01', e.message, '', '');
-            return new ApiResult(500, 'Error during the activation process', 1, [error]);
+            return new ApiResult(500, 'Login error: ', 1, [error]);
         }
 
         // 2. Connect to the user database
-        const warehouse = require('./warehouse.js');
-
+        // const warehouse = require('./warehouse.js');
         conn = await tenantdb.getPromisePool(userId).getConnection();
-        const location = {
-            code: 'UBIC02',
-            description: 'Another description'
-        };
-        warehouse.createLocation(conn, location);
+        // const location = {
+        //     code: 'UBIC02',
+        //     description: 'Another description'
+        // };
+        // warehouse.createLocation(conn, location);
     }
 };
 

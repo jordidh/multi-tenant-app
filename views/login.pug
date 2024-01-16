@@ -13,9 +13,11 @@ block content
                 a.leftspace(href='/register') Register
     .container
         .column-left 
-            if (activated)
-                div#success(style=`visibility: visible;`, onclick='hide()')
-                    strong Your account has been activated and the organization data base created.
+            if message
+                if message.type == 'error'
+                    div#errorbox(style=`visibility: visible;`, onclick='hide()')= message.text
+                if message.type == 'ok'
+                    div#success(style=`visibility: visible;`, onclick='hide()')= message.text
             h2 nu+warehouse
             form(action='/login' method='post')
                 label(for='username') User name:

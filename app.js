@@ -152,7 +152,6 @@ app.use(function (err, req, res, next) {
     logger.error(`ExpressJS: [${req.method}] ${req.originalUrl}: ${status}: ${err.message}`);
 
     res.status(status);
-    res.render('error');
 });
 
 logger.info(`Node environment = ${(process.env.NODE_ENV ? process.env.NODE_ENV : 'development')}`);

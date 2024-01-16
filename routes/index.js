@@ -15,15 +15,15 @@ router.get('/login', function (req, res, next) {
     res.render('login', { title: 'nu+warehouses' });
 });
 
-router.post('/login', function (req, res, next) {
+router.post('/login', async function (req, res, next) {
     console.log(`${(new Date()).toISOString()} - [POST]/of/ received ${JSON.stringify(req.body)}`);
-    // {"username":"","user":"","submitCode":"Login"}
-    const loginResult = tenant.loginDb(req.body.username, req.body.password);
-    if (loginResult.error) {
-        res.render('login', { title: 'nu+warehouses' });
-    } else {
-        res.render('login', { title: 'nu+warehouses' });
+
+    const loginResult = await tenant.loginDb(req.body.username, req.body.password);
+    if (loginResult.errors.length > 0) {
+        res.render('login', { title: 'nu+warehouses', message: { type: 'error', text: `${loginResult.data}: ${loginResult.errors[0].message}` } });
+        return;
     }
+    res.render('login', { title: 'nu+warehouses' });
 });
 
 router.get('/register', function (req, res, next) {
@@ -43,13 +43,13 @@ router.post('/register', async function (req, res, next) {
     // Check passwords are equal
     if (req.body.password1 !== req.body.password2) {
         logger.error(tenant.PASSNOTEQUAL);
-        res.render('register', { show: 'visible', message: { type: 'error', text: tenant.PASSNOTEQUAL } });
+        res.render('register', { title: 'nu+warehouses', message: { type: 'error', text: tenant.PASSNOTEQUAL } });
         return;
     }
     // Check passwords match minimum requirements
     if (tenant.isValidPassword(req.body.password1) === false) {
         logger.error(tenant.ERRORPATTERNPASS);
-        res.render('register', { show: 'visible', message: { type: 'error', text: tenant.ERRORPATTERNPASS } });
+        res.render('register', { title: 'nu+warehouses', message: { type: 'error', text: tenant.ERRORPATTERNPASS } });
         return;
     }
 
@@ -73,7 +73,7 @@ router.post('/register', async function (req, res, next) {
     // Creation of the activation link
     const creationResult = await tenant.createTenant(organization, user);
     if (creationResult.errors && creationResult.errors.length > 0) {
-        res.render('register', { show: 'visible', message: { type: 'error', text: `${creationResult.data}: ${creationResult.errors[0].message}` } });
+        res.render('register', { title: 'nu+warehouses', message: { type: 'error', text: `${creationResult.data}: ${creationResult.errors[0].message}` } });
         return;
     }
     console.log('Link d"activació:' + creationResult.data.activationLink);
@@ -98,8 +98,6 @@ router.post('/register', async function (req, res, next) {
     } else {
         res.render('activate', { userEmail: user.email });
     }
-
-    res.render('activate', { userEmail: user.email });
 });
 
 router.get('/activate', async function (req, res, next) {
@@ -107,7 +105,7 @@ router.get('/activate', async function (req, res, next) {
         if (req.query.tenant && req.query.user && req.query.code) {
             const userActivation = await tenant.activateAccount(req.query.tenant, req.query.user, req.query.code);
             if (userActivation) {
-                res.render('login', { title: 'nu+warehouses', activated: true });
+                res.render('login', { title: 'nu+warehouses', message: { type: 'ok', text: 'Your account has been activated and the organization data base created.' } });
             } else {
                 throw new Error('Error during activation');
             }

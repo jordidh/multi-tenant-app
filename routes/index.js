@@ -18,8 +18,12 @@ router.get('/login', function (req, res, next) {
 router.post('/login', function (req, res, next) {
     console.log(`${(new Date()).toISOString()} - [POST]/of/ received ${JSON.stringify(req.body)}`);
     // {"username":"","user":"","submitCode":"Login"}
-
-    res.render('login', { title: 'nu+warehouses' });
+    const loginResult = tenant.loginDb(req.body.username, req.body.password);
+    if (loginResult.error) {
+        res.render('login', { title: 'nu+warehouses' });
+    } else {
+        res.render('login', { title: 'nu+warehouses' });
+    }
 });
 
 router.get('/register', function (req, res, next) {
@@ -94,6 +98,8 @@ router.post('/register', async function (req, res, next) {
     } else {
         res.render('activate', { userEmail: user.email });
     }
+
+    res.render('activate', { userEmail: user.email });
 });
 
 router.get('/activate', async function (req, res, next) {

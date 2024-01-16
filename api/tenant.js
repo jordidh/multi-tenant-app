@@ -48,16 +48,6 @@ module.exports = {
     },
 
     /**
-     * Method that compares a plain text password with a hashed password
-     * @param {*} plainTextPassword
-     * @param {*} hashedPassword : loaded from the database
-     * @returns : true if the passwords match, false otherwise
-     */
-    comparePasswords: async function (plainTextPassword, hashedPassword) {
-        return await bcrypt.compare(plainTextPassword, hashedPassword);
-    },
-
-    /**
      * Creates a new tenant, a new organization a a new user
      * @param {*} organization : object with attributes: organization, vatnumber, country, city, zipcode, address
      * @param {*} user : object with attributes: firstname, lastname, username, password1, email
@@ -109,8 +99,6 @@ module.exports = {
                 throw new Error('Error creating activation link');
             }
 
-            // TODO: send the lik via email
-
             await conn.commit();
             logger.info('tenant.createTenant(): Transaction committed');
 
@@ -154,7 +142,7 @@ module.exports = {
                     sql = 'SELECT t.* FROM tenants t JOIN organizations o ON t.id = o.tenant_id JOIN users u ON o.id = u.organization_id WHERE u.id = ?';
                     const [userTenantData] = await conn.execute(sql, [user]);
 
-                    const userDb = await createUserDB(user, userTenantData[0].uuid, conn);
+                    const userDb = await createUserDB(userTenantData[0]);
                     if (!userDb) {
                         throw new Error('Error creating user database');
                     }
@@ -178,9 +166,57 @@ module.exports = {
     },
 
     loginDb: async function (user, passwd) {
-        // TODO: login into user db
+        // 1. Verify that the user and password are registered in the database
+        let conn = await database.getPromisePool().getConnection();
+        let userId;
+        try {
+            // Verify the introduced user name in the db
+            const sql = 'SELECT id, user_name, password FROM users WHERE user_name= ? ';
+            const resultQuery = await conn.execute(sql, [user]);
+            if (resultQuery.length !== 2 || resultQuery[0].length === 0) throw new Error('Select id, user_name, password was not successful');
+
+            const usernamedb = resultQuery[0][0].user_name;
+            if (usernamedb !== user) {
+                console.log('The username does not exist.');
+            }
+
+            // Verify the introduced password in the db
+            const passworddb = resultQuery[0][0].password;
+            if (await comparePasswords(passwd, passworddb) === false) {
+                console.log('Password does not match with the username.');
+            }
+
+            // Get the user id to later connect the database
+            userId = resultQuery[0][0].id;
+            console.log('User verification successful');
+        } catch (e) {
+            logger.error(`tenant.login(): Error logging user: ${e}`);
+            logger.info('tenant.login(): Transaction rolled back');
+            const error = new ApiError('REG01', e.message, '', '');
+            return new ApiResult(500, 'Error during the activation process', 1, [error]);
+        }
+
+        // 2. Connect to the user database
+        const warehouse = require('./warehouse.js');
+
+        conn = await tenantdb.getPromisePool(userId).getConnection();
+        const location = {
+            code: 'UBIC02',
+            description: 'Another description'
+        };
+        warehouse.createLocation(conn, location);
     }
 };
+
+/**
+     * Method that compares a plain text password with a hashed password
+     * @param {*} plainTextPassword
+     * @param {*} hashedPassword : loaded from the database
+     * @returns : true if the passwords match, false otherwise
+     */
+async function comparePasswords (plainTextPassword, hashedPassword) {
+    return await bcrypt.compare(plainTextPassword, hashedPassword);
+}
 
 async function createOrganizationTenant (conn, tenantUuid, tenant, organization, user, hashedPassword) {
     // Insert tenant: if tenant name and host are repeated, the transaction will rollback
@@ -361,12 +397,12 @@ async function hashPassword (plainTextPassword, saltRounds) {
     return hash;
 }
 
-async function createUserDB (user, uuid) {
+async function createUserDB (tenant) {
     try {
         // Connection to mysql db
         const connToMySql = await mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            port: process.env.DB_PORT || 3306,
+            host: tenant.db_host || 'localhost',
+            port: tenant.db_port || 3306,
             user: process.env.DB_USER || 'cbwms',
             password: process.env.DB_PASSWORD || '1qaz2wsx',
             database: 'mysql'
@@ -375,16 +411,28 @@ async function createUserDB (user, uuid) {
         let conn = connToMySql.promise();
 
         // Create the new DB
-        const dbCreated = await conn.execute(`CREATE DATABASE IF NOT EXISTS DB_USER_${user};`);
-        if (dbCreated.length !== 2) throw new Error('User db not created');
+        const dbCreated = await conn.execute(`CREATE DATABASE IF NOT EXISTS \`${tenant.db_name}\`;`);
+        if (dbCreated.length !== 2) throw new Error('User database not created');
+
+        // Create the new user
+        const userCreated = await conn.execute(`CREATE USER '${tenant.db_username}'@'${process.env.DB_HOST}' IDENTIFIED BY '${tenant.db_password}';`);
+        if (userCreated.length !== 2) throw new Error('User not created');
+
+        // Grant privileges to the new user over the new db
+        const userPrivilege = await conn.execute(`GRANT ALL PRIVILEGES ON \`${tenant.db_name}\`.* TO '${tenant.db_username}'@'${process.env.DB_HOST}';`);
+        if (userPrivilege.length !== 2) throw new Error('User privileges not conceded');
+
+        // FLUSH PRIVILEGES to reload
+        const flushPrivileges = await conn.execute('FLUSH PRIVILEGES');
+        if (flushPrivileges.length !== 2) throw new Error('Flush privileges not executed');
 
         // Connection to new DB
         const connToUserDB = await mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            port: process.env.DB_PORT || 3306,
-            user: process.env.DB_USER || 'cbwms',
-            password: process.env.DB_PASSWORD || '1qaz2wsx',
-            database: `DB_USER_${user}`
+            host: tenant.db_host || 'localhost',
+            port: tenant.db_port || 3306,
+            user: tenant.db_username || 'cbwms',
+            password: tenant.db_password || '1qaz2wsx',
+            database: tenant.db_name
         });
         // Change promise to the new DB connection
         conn = connToUserDB.promise();
@@ -408,6 +456,24 @@ async function createUserDB (user, uuid) {
         const insertIntoLocation = await conn.execute("INSERT INTO location (code, description) VALUES ('UBIC01' ,'descripcio de prova');");
         if (insertIntoLocation.length !== 2 || insertIntoLocation[0].affectedRows !== 1) {
             throw new Error('Couldn\'t insert values into location');
+        }
+
+        // Insert initial data into unit
+        const insertIntoUnit = await conn.execute("INSERT INTO unit (code, description, base_unit) VALUES ('UNIT01' ,'descripcio de prova', 6);");
+        if (insertIntoUnit.length !== 2 || insertIntoUnit[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into unit');
+        }
+
+        // Insert initial data into product
+        const insertIntoProduct = await conn.execute("INSERT INTO product (code, description) VALUES ('PRODUCT01' ,'descripcio de prova');");
+        if (insertIntoProduct.length !== 2 || insertIntoProduct[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into product');
+        }
+
+        // Insert initial data into stock
+        const insertIntoStock = await conn.execute('INSERT INTO stock (quantity, location_id, product_id, unit_id) VALUES (5, 1, 1, 1);');
+        if (insertIntoStock.length !== 2 || insertIntoStock[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into stock');
         }
 
         console.log('Database and tables successfully created.');

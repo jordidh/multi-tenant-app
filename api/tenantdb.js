@@ -25,11 +25,11 @@ module.exports = {
 
     addConnection: function (db) {
         const pool = mysql.createPool({
-            host: db.host,
-            port: db.port,
-            user: db.user,
-            password: db.password,
-            database: db.database,
+            host: db.db_host,
+            port: db.db_port,
+            user: db.db_username,
+            password: db.db_password,
+            database: db.db_name,
             connectionLimit: db.connectionLimit
         });
         const promisePool = pool.promise();

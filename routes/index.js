@@ -21,8 +21,9 @@ router.post('/login', async function (req, res, next) {
     const loginResult = await tenant.loginDb(req.body.username, req.body.password);
     if (loginResult.errors.length > 0) {
         res.render('login', { title: 'nu+warehouses', message: { type: 'error', text: `${loginResult.data}: ${loginResult.errors[0].message}` } });
-        return;
     }
+    // const warehouse = require();
+    // const conn = loginResult.data.conn;
     res.render('login', { title: 'nu+warehouses' });
 });
 
@@ -85,7 +86,7 @@ router.post('/register', async function (req, res, next) {
             html: `<h2>Click on the link below to activate your account</h2>
                     <p><a href="http://localhost:3000${creationResult.data.activationLink}">
                     Click here to activate your account</a></p>`,
-            from_email: 'alvaro@ranacuajo.com',
+            from_email: 'support@codebiting.com',
             to: [{
                 email: user.email
             }

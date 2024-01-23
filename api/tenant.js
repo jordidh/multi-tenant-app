@@ -164,9 +164,14 @@ module.exports = {
             return new ApiResult(500, 'Error during the activation process', 1, [error]);
         }
     },
-
+    /**
+     *
+     * @param {*} user the username introduced in /login
+     * @param {*} passwd  the password introduced in /login
+     * Checks if the user and password introduced are correct
+     * @returns The connection with the user database or an error message.
+     */
     loginDb: async function (user, passwd) {
-        // 1. Verify that the user and password are registered in the database
         let conn = await database.getPromisePool().getConnection();
         let userId;
         try {
@@ -181,25 +186,18 @@ module.exports = {
                 throw new Error('Password does not match with the username.');
             }
 
-            // Get the user id to later connect the database
+            // Get the user id to connect the database
             userId = resultQuery[0][0].id;
-            console.log('User verification successful');
-            // return new ApiResult(200, { message: 'User verification successful.' }, 1, []);
+            logger.info('User verification successful');
+            conn = await tenantdb.getPromisePool(userId).getConnection();
+
+            return new ApiResult(200, { message: 'User verification successful.', conn }, 1, []);
         } catch (e) {
             logger.error(`tenant.login(): Error logging user: ${e}`);
             logger.info('tenant.login(): Transaction rolled back');
             const error = new ApiError('REG01', e.message, '', '');
             return new ApiResult(500, 'Login error: ', 1, [error]);
         }
-
-        // 2. Connect to the user database
-        // const warehouse = require('./warehouse.js');
-        conn = await tenantdb.getPromisePool(userId).getConnection();
-        // const location = {
-        //     code: 'UBIC02',
-        //     description: 'Another description'
-        // };
-        // warehouse.createLocation(conn, location);
     }
 };
 
@@ -471,10 +469,10 @@ async function createUserDB (tenant) {
             throw new Error('Couldn\'t insert values into stock');
         }
 
-        console.log('Database and tables successfully created.');
+        logger.info('Database and tables successfully created.');
         return true;
     } catch (error) {
-        console.error('Error creating database and tables:', error);
+        logger.error('Error creating database and tables:', error);
         return false;
     }
 }

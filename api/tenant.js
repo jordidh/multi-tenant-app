@@ -11,7 +11,10 @@ const ApiResult = require('./ApiResult');
 const ApiError = require('./ApiError');
 const tenantdb = require('./tenantdb');
 const mysql = require('mysql2');
+const fs = require('fs');
 
+// 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
+const TENANTSCRIPT = fs.readFileSync('scripts/db/db_tenant.sql', 'utf8');
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 const BCRYPT_PASSWROD_MAX_LENGTH = 72;
 const PASSNOTEQUAL = 'Passwords are not equal.';
@@ -42,16 +45,6 @@ module.exports = {
     isValidPassword: function (plainTextPassword) {
         const matchResults = plainTextPassword.match(PATTERN_PASSWORD);
         return (matchResults !== null);
-    },
-
-    /**
-     * Method that compares a plain text password with a hashed password
-     * @param {*} plainTextPassword
-     * @param {*} hashedPassword : loaded from the database
-     * @returns : true if the passwords match, false otherwise
-     */
-    comparePasswords: async function (plainTextPassword, hashedPassword) {
-        return await bcrypt.compare(plainTextPassword, hashedPassword);
     },
 
     /**
@@ -106,8 +99,6 @@ module.exports = {
                 throw new Error('Error creating activation link');
             }
 
-            // TODO: send the lik via email
-
             await conn.commit();
             logger.info('tenant.createTenant(): Transaction committed');
 
@@ -151,7 +142,7 @@ module.exports = {
                     sql = 'SELECT t.* FROM tenants t JOIN organizations o ON t.id = o.tenant_id JOIN users u ON o.id = u.organization_id WHERE u.id = ?';
                     const [userTenantData] = await conn.execute(sql, [user]);
 
-                    const userDb = await createUserDB(user, userTenantData[0].uuid, conn);
+                    const userDb = await createUserDB(userTenantData[0]);
                     if (!userDb) {
                         throw new Error('Error creating user database');
                     }
@@ -173,11 +164,52 @@ module.exports = {
             return new ApiResult(500, 'Error during the activation process', 1, [error]);
         }
     },
-
+    /**
+     *
+     * @param {*} user the username introduced in /login
+     * @param {*} passwd  the password introduced in /login
+     * Checks if the user and password introduced are correct
+     * @returns The connection with the user database or an error message.
+     */
     loginDb: async function (user, passwd) {
-        // TODO: login into user db
+        let conn = await database.getPromisePool().getConnection();
+        let userId;
+        try {
+            // Verify the introduced user name in the db
+            const sql = 'SELECT id, user_name, password FROM users WHERE user_name= ? ';
+            const resultQuery = await conn.execute(sql, [user]);
+            if (resultQuery.length !== 2 || resultQuery[0].length === 0) throw new Error('Username not found.');
+
+            // Verify the introduced password in the db
+            const passworddb = resultQuery[0][0].password;
+            if (await comparePasswords(passwd, passworddb) === false) {
+                throw new Error('Password does not match with the username.');
+            }
+
+            // Get the user id to connect the database
+            userId = resultQuery[0][0].id;
+            logger.info('User verification successful');
+            conn = await tenantdb.getPromisePool(userId).getConnection();
+
+            return new ApiResult(200, { message: 'User verification successful.', conn }, 1, []);
+        } catch (e) {
+            logger.error(`tenant.login(): Error logging user: ${e}`);
+            logger.info('tenant.login(): Transaction rolled back');
+            const error = new ApiError('REG01', e.message, '', '');
+            return new ApiResult(500, 'Login error: ', 1, [error]);
+        }
     }
 };
+
+/**
+     * Method that compares a plain text password with a hashed password
+     * @param {*} plainTextPassword
+     * @param {*} hashedPassword : loaded from the database
+     * @returns : true if the passwords match, false otherwise
+     */
+async function comparePasswords (plainTextPassword, hashedPassword) {
+    return await bcrypt.compare(plainTextPassword, hashedPassword);
+}
 
 async function createOrganizationTenant (conn, tenantUuid, tenant, organization, user, hashedPassword) {
     // Insert tenant: if tenant name and host are repeated, the transaction will rollback
@@ -358,12 +390,12 @@ async function hashPassword (plainTextPassword, saltRounds) {
     return hash;
 }
 
-async function createUserDB (user, uuid) {
+async function createUserDB (tenant) {
     try {
         // Connection to mysql db
         const connToMySql = await mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            port: process.env.DB_PORT || 3306,
+            host: tenant.db_host || 'localhost',
+            port: tenant.db_port || 3306,
             user: process.env.DB_USER || 'cbwms',
             password: process.env.DB_PASSWORD || '1qaz2wsx',
             database: 'mysql'
@@ -372,40 +404,75 @@ async function createUserDB (user, uuid) {
         let conn = connToMySql.promise();
 
         // Create the new DB
-        const dbCreated = await conn.execute(`CREATE DATABASE IF NOT EXISTS DB_USER_${user};`);
-        if (dbCreated.length !== 2) throw new Error('User db not created');
+        const dbCreated = await conn.execute(`CREATE DATABASE IF NOT EXISTS \`${tenant.db_name}\`;`);
+        if (dbCreated.length !== 2) throw new Error('User database not created');
+
+        // Create the new user
+        const userCreated = await conn.execute(`CREATE USER '${tenant.db_username}'@'${process.env.DB_HOST}' IDENTIFIED BY '${tenant.db_password}';`);
+        if (userCreated.length !== 2) throw new Error('User not created');
+
+        // Grant privileges to the new user over the new db
+        const userPrivilege = await conn.execute(`GRANT ALL PRIVILEGES ON \`${tenant.db_name}\`.* TO '${tenant.db_username}'@'${process.env.DB_HOST}';`);
+        if (userPrivilege.length !== 2) throw new Error('User privileges not conceded');
+
+        // FLUSH PRIVILEGES to reload
+        const flushPrivileges = await conn.execute('FLUSH PRIVILEGES');
+        if (flushPrivileges.length !== 2) throw new Error('Flush privileges not executed');
 
         // Connection to new DB
         const connToUserDB = await mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            port: process.env.DB_PORT || 3306,
-            user: process.env.DB_USER || 'cbwms',
-            password: process.env.DB_PASSWORD || '1qaz2wsx',
-            database: `DB_USER_${user}`
+            host: tenant.db_host || 'localhost',
+            port: tenant.db_port || 3306,
+            user: tenant.db_username || 'cbwms',
+            password: tenant.db_password || '1qaz2wsx',
+            database: tenant.db_name
         });
         // Change promise to the new DB connection
         conn = connToUserDB.promise();
 
-        // Create the user_groups table
-        const tableGroupCreated = await conn.execute('CREATE TABLE IF NOT EXISTS user_groups(id SERIAL PRIMARY KEY, group_name VARCHAR(255) UNIQUE NOT NULL);');
-        if (tableGroupCreated.length !== 2) throw new Error('Groups table not created');
+        /**
+         * TENANTSCRIPT contains all the queries inside a single String, but the 'execute' method only accepts one query at a time.
+         * Therefore, we need to create an Array using 'split' with ';' as the separator.
+         * 'queries' is an Array containing all the queries, but some positions can be occupied with '', which we can fix using 'trim'.
+         * 'filter' creates an Array with the Strings that meet the condition (having other characters after deleting white spaces with trim).
+         * The loop 'for' serves to iterate every query as a single string.
+         * */
+        const queries = TENANTSCRIPT.split(';');
+        const validQueries = queries.filter(query => query.trim() !== '');
+        let tablesTenant;
+        for (const query of validQueries) {
+            tablesTenant = await conn.execute(query);
+            if (tablesTenant.length !== 2) throw new Error(`Tenant tables not created, executing query ${query}`);
+        }
 
-        // Create the users table
-        const tableUserCreated = await conn.execute('CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, tenant_uuid VARCHAR(255) UNIQUE NOT NULL, group_id BIGINT UNSIGNED NOT NULL, FOREIGN KEY (tenant_uuid) REFERENCES tenants_app.tenants(uuid), FOREIGN KEY (group_id) REFERENCES user_groups(id));');
-        if (tableUserCreated.length !== 2) throw new Error('Users table not created');
+        // Insert initial data into location
+        const insertIntoLocation = await conn.execute("INSERT INTO location (code, description) VALUES ('UBIC01' ,'descripcio de prova');");
+        if (insertIntoLocation.length !== 2 || insertIntoLocation[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into location');
+        }
 
-        // Insert initial data into user_groups
-        const insertIntoGroup = await conn.execute('INSERT INTO user_groups (group_name) VALUES (\'admin\');');
-        if (insertIntoGroup.length !== 2) throw new Error('Couldn\'t insert values into groups');
+        // Insert initial data into unit
+        const insertIntoUnit = await conn.execute("INSERT INTO unit (code, description, base_unit) VALUES ('UNIT01' ,'descripcio de prova', 6);");
+        if (insertIntoUnit.length !== 2 || insertIntoUnit[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into unit');
+        }
 
-        // Insert user activated into users with the group admin
-        const insertIntoUser = await conn.execute(`INSERT INTO users (tenant_uuid, group_id) VALUES ('${uuid}', 1);`);
-        if (insertIntoUser.length !== 2) throw new Error('Couldn\'t insert values into users');
+        // Insert initial data into product
+        const insertIntoProduct = await conn.execute("INSERT INTO product (code, description) VALUES ('PRODUCT01' ,'descripcio de prova');");
+        if (insertIntoProduct.length !== 2 || insertIntoProduct[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into product');
+        }
 
-        // console.log("Database and tables successfully created.");
+        // Insert initial data into stock
+        const insertIntoStock = await conn.execute('INSERT INTO stock (quantity, location_id, product_id, unit_id) VALUES (5, 1, 1, 1);');
+        if (insertIntoStock.length !== 2 || insertIntoStock[0].affectedRows !== 1) {
+            throw new Error('Couldn\'t insert values into stock');
+        }
+
+        logger.info('Database and tables successfully created.');
         return true;
     } catch (error) {
-        console.error('Error creating database and tables:', error);
+        logger.error('Error creating database and tables:', error);
         return false;
     }
 }

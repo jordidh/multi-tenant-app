@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const logger = require('./api/logger');
 const database = require('./api/database');
 const uniqid = require('uniqid');
+const tenantdb = require('./api/tenantdb');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -58,6 +59,42 @@ database.connect(db, function (err) {
         });
     }
 });
+
+// Gets all databases from mysql and adds to the connectionMap with tenantdb.connectAll(dbs)
+async function getAllDatabase () {
+    const conn = await database.getPromisePool().getConnection();
+    let db;
+    const dbs = [];
+    try {
+        let sql = 'SELECT * FROM tenants ';
+        const totalTenants = await conn.execute(sql);
+        if (totalTenants.length !== 2 || totalTenants[0].length === 0) {
+            throw new Error('Select * FROM tenants was not successful');
+        }
+        for (let i = 0; i < totalTenants[0].length; i++) {
+            sql = 'SELECT db_name, db_username, db_password FROM tenants WHERE id = ?';
+            const resultQuery = await conn.execute(sql, [i + 1]);
+            if (resultQuery.length !== 2 || resultQuery[0].length === 0) {
+                throw new Error('Select db_name, db_username, db_password was not successful');
+            }
+            db = {
+                id: (i + 1),
+                host: process.env.DB_HOST,
+                port: process.env.DB_PORT,
+                user: resultQuery[0][0].db_username,
+                password: resultQuery[0][0].db_password,
+                database: resultQuery[0][0].db_name,
+                connectionLimit: process.env.DB_CONNECTION_LIMIT
+            };
+            dbs.push(db);
+        }
+        tenantdb.connectAll(dbs);
+    } catch (e) {
+        console.log('Error with getAllDatabase() from app.js. ' + e);
+    }
+}
+
+getAllDatabase();
 
 const app = express();
 
@@ -118,7 +155,6 @@ app.use(function (err, req, res, next) {
     logger.error(`ExpressJS: [${req.method}] ${req.originalUrl}: ${status}: ${err.message}`);
 
     res.status(status);
-    res.render('error');
 });
 
 logger.info(`Node environment = ${(process.env.NODE_ENV ? process.env.NODE_ENV : 'development')}`);

@@ -13,16 +13,18 @@ block content
                 a.leftspace(href='/register') Register
     .container
         .column-left 
-            if (activated)
-                div#success(style=`visibility: visible;`, onclick='hide()')
-                    strong Your account has been activated and the organization data base created.
+            if message
+                if message.type == 'error'
+                    div#errorbox(style=`visibility: visible;`, onclick='hide()')= message.text
+                if message.type == 'ok'
+                    div#success(style=`visibility: visible;`, onclick='hide()')= message.text
             h2 nu+warehouse
             form(action='/login' method='post')
                 label(for='username') User name:
                 input#fname(type='text' name='username' value='' autofocus)
                 br
                 label(for='password') Password:
-                input#user(type='password' name='user' value=user)
+                input#user(type='password' name='password' value=user)
                 br
                 input#submitof(name="submitCode" type='submit' value='Login' style='width: 20%;')
             p * Can not access your account? 

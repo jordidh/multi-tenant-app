@@ -9,8 +9,10 @@ const database = require('./api/database');
 const uniqid = require('uniqid');
 const tenantdb = require('./api/tenantdb');
 
+const apiDocsV1 = require('./routes/v1/api-docs');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const warehouseRouter = require('./routes/warehouse');
 
 /* const nodemailer = require("nodemailer");
 var transporter=null; */
@@ -68,7 +70,8 @@ async function getAllDatabase () {
     try {
         let sql = 'SELECT * FROM tenants ';
         const totalTenants = await conn.execute(sql);
-        if (totalTenants.length !== 2 || totalTenants[0].length === 0) {
+        // if (totalTenants.length !== 2 || totalTenants[0].length === 0) {
+        if (totalTenants.length !== 2) {
             throw new Error('Select * FROM tenants was not successful');
         }
         for (let i = 0; i < totalTenants[0].length; i++) {
@@ -124,6 +127,8 @@ app.use(
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/warehouse', warehouseRouter);
+app.use('/v1/api-docs', apiDocsV1);
 
 /**
  * Generate one uniqueid everytime API is called, to trace the client call

@@ -22,7 +22,6 @@ router.post('/login', async function (req, res, next) {
     if (loginResult.errors.length > 0) {
         res.render('login', { title: 'nu+warehouses', message: { type: 'error', text: `${loginResult.data}: ${loginResult.errors[0].message}` } });
     }
-    // const warehouse = require();
     // const conn = loginResult.data.conn;
     res.render('login', { title: 'nu+warehouses' });
 });

@@ -191,6 +191,10 @@ module.exports = {
             logger.info('User verification successful');
             conn = await tenantdb.getPromisePool(userId).getConnection();
 
+            const isolationLevel = await conn.execute('SET SESSION transaction_isolation="REPEATABLE-READ"');
+            if (isolationLevel.length !== 2) {
+                throw new Error('Transaction isolation level not established');
+            }
             return new ApiResult(200, { message: 'User verification successful.', conn }, 1, []);
         } catch (e) {
             logger.error(`tenant.login(): Error logging user: ${e}`);
@@ -433,7 +437,6 @@ async function createUserDB (tenant) {
         /**
          * TENANTSCRIPT contains all the queries inside a single String, but the 'execute' method only accepts one query at a time.
          * Therefore, we need to create an Array using 'split' with ';' as the separator.
-         * 'queries' is an Array containing all the queries, but some positions can be occupied with '', which we can fix using 'trim'.
          * 'filter' creates an Array with the Strings that meet the condition (having other characters after deleting white spaces with trim).
          * The loop 'for' serves to iterate every query as a single string.
          * */
@@ -444,35 +447,57 @@ async function createUserDB (tenant) {
             tablesTenant = await conn.execute(query);
             if (tablesTenant.length !== 2) throw new Error(`Tenant tables not created, executing query ${query}`);
         }
-
-        // Insert initial data into location
-        const insertIntoLocation = await conn.execute("INSERT INTO location (code, description) VALUES ('UBIC01' ,'descripcio de prova');");
-        if (insertIntoLocation.length !== 2 || insertIntoLocation[0].affectedRows !== 1) {
-            throw new Error('Couldn\'t insert values into location');
-        }
-
-        // Insert initial data into unit
-        const insertIntoUnit = await conn.execute("INSERT INTO unit (code, description, base_unit) VALUES ('UNIT01' ,'descripcio de prova', 6);");
-        if (insertIntoUnit.length !== 2 || insertIntoUnit[0].affectedRows !== 1) {
-            throw new Error('Couldn\'t insert values into unit');
-        }
-
-        // Insert initial data into product
-        const insertIntoProduct = await conn.execute("INSERT INTO product (code, description) VALUES ('PRODUCT01' ,'descripcio de prova');");
-        if (insertIntoProduct.length !== 2 || insertIntoProduct[0].affectedRows !== 1) {
-            throw new Error('Couldn\'t insert values into product');
-        }
-
-        // Insert initial data into stock
-        const insertIntoStock = await conn.execute('INSERT INTO stock (quantity, location_id, product_id, unit_id) VALUES (5, 1, 1, 1);');
-        if (insertIntoStock.length !== 2 || insertIntoStock[0].affectedRows !== 1) {
-            throw new Error('Couldn\'t insert values into stock');
-        }
-
+        await insertData(conn);
         logger.info('Database and tables successfully created.');
         return true;
     } catch (error) {
         logger.error('Error creating database and tables:', error);
         return false;
+    }
+}
+
+async function insertData (conn) {
+    // Insert initial data into location
+    const insertIntoLocation = await conn.execute("INSERT INTO location (code, description) VALUES ('UBIC01' ,'descripcio de prova');");
+    if (insertIntoLocation.length !== 2 || insertIntoLocation[0].affectedRows !== 1) {
+        throw new Error('Couldn\'t insert values into location');
+    }
+
+    // Insert initial data into unit
+    const insertUnit = await conn.execute("INSERT INTO unit (code, description, base_unit) VALUES ('UNIT01' ,'descripcio de prova', 1);");
+    const insertUnit2 = await conn.execute("INSERT INTO unit (code, description, base_unit) VALUES ('UNIT01' ,'descripcio de prova', 10);");
+    if (insertUnit[0].affectedRows !== 1 || insertUnit2[0].affectedRows !== 1) {
+        throw new Error('Couldn\'t insert values into unit');
+    }
+
+    // Insert initial data into product
+    const insertIntoProduct = await conn.execute("INSERT INTO product (code, description) VALUES ('PRODUCT01' ,'descripcio de prova');");
+    if (insertIntoProduct.length !== 2 || insertIntoProduct[0].affectedRows !== 1) {
+        throw new Error('Couldn\'t insert values into product');
+    }
+
+    // Insert initial data into stock
+    let insertIntoStock = await conn.execute('INSERT INTO stock (quantity, location_id, product_id, unit_id) VALUES (140, 1, 1, 1);');
+    insertIntoStock = await conn.execute('INSERT INTO stock (quantity, location_id, product_id, unit_id) VALUES (23, 1, 1, 2);');
+    if (insertIntoStock.length !== 2 || insertIntoStock[0].affectedRows !== 1) {
+        throw new Error('Couldn\'t insert values into stock');
+    }
+
+    // Insert functions into operation_type table.
+    const insertOperation = await conn.execute(`INSERT INTO operation_type (code, name, description) VALUES 
+    ('LOC01', 'createLocation', 'insert new location'),
+    ('LOC02', 'deleteLocation', 'delete a location'),
+    ('LOC03', 'updateLocation', 'updates a lcoation'),
+    ('STOCK01', 'createStock', 'insert new stock'),
+    ('STOCK02', 'deleteStock', 'delete a stock'),
+    ('STOCK03', 'updateStock', 'updates a stock'),
+    ('STOCK04', 'fusionStock', 'merge two stocks into one'),
+    ('STOCK05', 'divideStock', 'divides a stock into two'),
+    ('STOCK06', 'groupStock', 'groups a stock to another with higher base_unit'),
+    ('STOCK07', 'ungroupStock', 'ungroups a stock to another with lower base_unit'),
+    ('STOCK08', 'changeLocationStock', 'changes the location of the stock'),
+    ('STOCK09', 'countLocationStock', 'counts the amount of stock in a location');`);
+    if (insertOperation.length !== 2) {
+        throw new Error('Couldn\'t insert values into operation_type');
     }
 }

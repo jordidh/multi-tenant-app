@@ -37,4 +37,4 @@ scenarios:
           ]
       count: 2
 
-# artillery run ./test/stock-changeloca.yml
+# artillery run ./test/artillery/stock-changeloca.yml

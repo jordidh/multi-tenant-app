@@ -28,4 +28,4 @@ scenarios:
                 }
             ]
       count: 3
-# artillery run ./test/stock-group.yml
+# artillery run ./test/artillery/stock-group.yml

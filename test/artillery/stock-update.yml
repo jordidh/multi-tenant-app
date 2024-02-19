@@ -22,4 +22,4 @@ scenarios:
             version: 0
           }
       count: 3
-# artillery run ./test/stock-update.yml
+# artillery run ./test/artillery/stock-update.yml

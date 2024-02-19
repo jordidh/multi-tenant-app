@@ -34,17 +34,17 @@ CREATE TABLE IF NOT EXISTS `stock` (
 
 CREATE TABLE IF NOT EXISTS `operation_type`(
     `id` SERIAL PRIMARY KEY,
-    `code` VARCHAR(20),
-    `name` VARCHAR(20),
+    `code` VARCHAR(20) NOT NULL,
+    `name` VARCHAR(20) NOT NULL,
     `description` VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS `register` (
     `id` SERIAL PRIMARY KEY,
-    `stock_id` BIGINT UNSIGNED NOT NULL,
-    `operation_id` BIGINT UNSIGNED NOT NULL,
-    `date` DATE,
-    FOREIGN KEY (stock_id) REFERENCES stock(id),
-    FOREIGN KEY (operation_id) REFERENCES operation_type(id)
+    `initial_stock` JSON NOT NULL,
+    `result_stock` JSON NOT NULL,
+    `operation_type_id` BIGINT UNSIGNED NOT NULL,
+    `date` DATETIME,
+    FOREIGN KEY (operation_type_id) REFERENCES operation_type(id)
 );
 

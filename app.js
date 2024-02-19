@@ -70,7 +70,6 @@ async function getAllDatabase () {
     try {
         let sql = 'SELECT * FROM tenants ';
         const totalTenants = await conn.execute(sql);
-        // if (totalTenants.length !== 2 || totalTenants[0].length === 0) {
         if (totalTenants.length !== 2) {
             throw new Error('Select * FROM tenants was not successful');
         }

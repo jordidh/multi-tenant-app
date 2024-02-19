@@ -58,7 +58,7 @@ module.exports = {
 
         const conn = await database.getPromisePool().getConnection();
 
-        await conn.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        await conn.execute('SET SESSION transaction_isolation="REPEATABLE-READ"');
         await conn.beginTransaction();
 
         try {
@@ -115,7 +115,7 @@ module.exports = {
     activateAccount: async function (tenant, user, code) {
         const conn = await database.getPromisePool().getConnection();
         try {
-            await conn.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            await conn.execute('SET SESSION transaction_isolation="REPEATABLE-READ"');
             await conn.beginTransaction();
 
             let sql = 'SELECT activation_code FROM activationcodes WHERE user_id = ? AND valid = 1';
@@ -485,9 +485,6 @@ async function insertData (conn) {
 
     // Insert functions into operation_type table.
     const insertOperation = await conn.execute(`INSERT INTO operation_type (code, name, description) VALUES 
-    ('LOC01', 'createLocation', 'insert new location'),
-    ('LOC02', 'deleteLocation', 'delete a location'),
-    ('LOC03', 'updateLocation', 'updates a lcoation'),
     ('STOCK01', 'createStock', 'insert new stock'),
     ('STOCK02', 'deleteStock', 'delete a stock'),
     ('STOCK03', 'updateStock', 'updates a stock'),

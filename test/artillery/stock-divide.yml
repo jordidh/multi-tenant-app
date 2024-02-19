@@ -10,31 +10,21 @@ config:
 scenarios:
   - flow:
     - loop:
-      - log: "Change location stock"
+      - log: "Divide stock"
       - post: 
-          url: "/stock/change-location"
+          url: "/stock/divide"
           json: [
             {
-              id: 2,
-              location_id: 2,
-              version: 0
-            },
-            {
-              id: 1
-            }
-          ]
-      - post: 
-          url: "/stock/change-location"
-          json: [
-            {
-              id: 2,
+              id: 1,
+              quantity: 0,
               location_id: 1,
+              product_id: 1,
+              unit_id: 1,
               version: 0
             },
             {
-              id: 2
+              quantity: 2
             }
           ]
-      count: 2
-
-# artillery run ./test/stock-changelocb.yml
+      count: 3
+# artillery run ./test/artillery/stock-divide.yml

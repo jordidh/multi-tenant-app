@@ -98,6 +98,7 @@ router.post('/register', async function (req, res, next) {
     } else {
         res.render('activate', { userEmail: user.email });
     }
+    res.render('activate', { userEmail: user.email });
 });
 
 router.get('/activate', async function (req, res, next) {

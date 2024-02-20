@@ -114,10 +114,10 @@ router.get('/location', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Location read successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -159,10 +159,10 @@ router.get('/location/:id', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Location read successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -201,10 +201,10 @@ router.post('/location', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Location created successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data[0]);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -219,7 +219,7 @@ router.post('/location', async function (req, res, next) {
  *     parameters:
  *       - in: path
  *         name: id
- *         description: Use the stock ID to perform a search
+ *         description: Use the location ID to perform a search
  *         schema:
  *           type: integer
  *         required: true
@@ -252,15 +252,15 @@ router.put('/location/:id', async function (req, res, next) {
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
-
+    logger.info(req.body.code);
     const ApiResult = await warehouse.updateLocation(conn, req.params.id, req.body);
     if (ApiResult.errors.length === 0) {
         logger.info('Location updated successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -309,10 +309,10 @@ router.delete('/location/:id', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Location deleted successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -374,13 +374,14 @@ router.get('/stock', async function (req, res, next) {
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
     const ApiResult = await warehouse.getStocks(conn, req.query);
+    console.log(res.body);
     if (ApiResult.errors.length === 0) {
         logger.info('Stocks read successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -422,10 +423,10 @@ router.get('/stock/:id', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Stock read successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -463,9 +464,12 @@ router.post('/stock', async function (req, res, next) {
     const ApiResult = await warehouse.createStock(conn, req.body);
     if (ApiResult.errors.length === 0) {
         logger.info('Stock created successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.status(ApiResult.status).json(ApiResult.data[0]);
 });
 
 /**
@@ -476,8 +480,6 @@ router.post('/stock', async function (req, res, next) {
  *       - Stock
  *     summary: update location
  *     description: Updates the stock replacing it's values with the ones inserted (except id and version).
- *     produces:
- *       - application/json
  *     parameters:
  *       - in: path
  *         name: id
@@ -514,21 +516,21 @@ router.put('/stock/:id', async function (req, res, next) {
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
-
+    logger.info(req.body.location_id);
     const ApiResult = await warehouse.updateStock(conn, req.params.id, req.body);
     if (ApiResult.errors.length === 0) {
         logger.info('Stock updated successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
 /**
  * @openapi
- * /warehouse/stock/:
+ * /warehouse/stock:
  *   delete:
  *     tags:
  *       - Stock
@@ -539,14 +541,7 @@ router.put('/stock/:id', async function (req, res, next) {
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *           example:
- *             - id: 1
- *               quantity: 5
- *               location_id: 1
- *               product_id: 1
- *               unit_id: 1
- *               version: 0
+ *             $ref: '#/definitions/schemas/Stock'
  *     responses:
  *       200:
  *         description: delete stock
@@ -564,21 +559,21 @@ router.put('/stock/:id', async function (req, res, next) {
  *                     type: object
  */
 
-router.delete('/stock/', async function (req, res, next) {
+router.delete('/stock', async function (req, res, next) {
     const conn = await tenantdb.getPromisePool(1).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const ApiResult = await warehouse.deleteStock(conn, req.body[0]);
+    const ApiResult = await warehouse.deleteStock(conn, req.body);
     if (ApiResult.errors.length === 0) {
         logger.info('Stock deleted successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -630,10 +625,10 @@ router.post('/stock/fusion', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Stock merged successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -680,10 +675,10 @@ router.post('/stock/divide', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Stock divided successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -728,18 +723,14 @@ router.post('/stock/group', async function (req, res, next) {
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const sql = 'SELECT version from unit where id = ?';
-    const version = await conn.execute(sql, [req.body[1].id]);
-    req.body[1].version = version[0][0].version;
-
     const ApiResult = await warehouse.groupStock(conn, req.body[0], req.body[1]);
     if (ApiResult.errors.length === 0) {
         logger.info('Stock grouped successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -788,10 +779,10 @@ router.post('/stock/ungroup', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Stock ungrouped successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -845,10 +836,10 @@ router.post('/stock/change-location', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Location stock changed successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 
@@ -890,10 +881,10 @@ router.get('/stock/count-location/:id', async function (req, res, next) {
     if (ApiResult.errors.length === 0) {
         logger.info('Location stock counted successfully');
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.data);
+        res.status(ApiResult.status).json(ApiResult);
     } else {
         conn.release();
-        res.status(ApiResult.status).json(ApiResult.errors[0]);
+        res.status(ApiResult.status).json(ApiResult);
     }
 });
 

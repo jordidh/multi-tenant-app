@@ -257,8 +257,6 @@ module.exports = {
             if (resultQuery[0].affectedRows !== 1) {
                 throw new Error('The version does not match with the stock.');
             }
-
-            stockId = parseInt(stockId);
             const resultStock = {
                 id: stockId,
                 quantity: updateStock.quantity,

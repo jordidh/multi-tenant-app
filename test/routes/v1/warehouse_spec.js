@@ -2,7 +2,7 @@ const chai = require('chai');
 const dirtyChai = require('dirty-chai');
 const chaiHttp = require('chai-http');
 const expect = require('chai').expect;
-const { describe, it } = require('mocha');
+const { after, describe, it } = require('mocha');
 
 chai.use(dirtyChai);
 chai.use(chaiHttp);
@@ -42,6 +42,10 @@ const UNIT10 = {
 };
 
 describe('API Warehouse', () => {
+    after(async function () {
+        await chai.request(URL).delete('/');
+    });
+
     // ----------GET ALL-----------
     it('should return all locations', async () => {
         const location = await chai.request(URL).get('/location');
@@ -58,6 +62,13 @@ describe('API Warehouse', () => {
     });
 
     it('should return all stocks', async () => {
+        const createStock = await chai.request(URL).post('/stock').send(STOCK_NEW);
+        expect(createStock.statusCode).to.equal(201);
+        expect(createStock.body.data).to.be.an('object');
+        expect(createStock.body.requestId).to.be.a('number');
+        expect(createStock.body.errors).to.be.an('array');
+        expect(createStock.body.errors).to.be.an('array').that.eql([]);
+
         const stock = await chai.request(URL).get('/stock');
         expect(stock.statusCode).to.equal(200);
         expect(stock.body.data).to.be.an('array');
@@ -65,12 +76,26 @@ describe('API Warehouse', () => {
         expect(stock.body.errors).to.be.an('array');
         expect(stock.body.errors).to.be.an('array').that.eql([]);
 
-        const stockLimits = await chai.request(URL).get('/stock?skip=0&limit=1&sort=quantity:ASC&filter=quantity:gt:5');
+        const stockLimits = await chai.request(URL).get('/stock?skip=0&limit=1&sort=quantity:ASC&filter=quantity:gt:0');
         expect(stockLimits.statusCode).to.equal(200);
         expect(stockLimits.body.data).to.be.an('array');
         expect(stockLimits.body.requestId).to.be.a('number');
         expect(stockLimits.body.errors).to.be.an('array');
         expect(stockLimits.body.errors).to.be.an('array').that.eql([]);
+
+        const deleteStock = await chai.request(URL).delete('/stock').send({
+            id: createStock.body.data.id,
+            quantity: STOCK_NEW.quantity,
+            location_id: STOCK_NEW.location_id,
+            product_id: STOCK_NEW.product_id,
+            unit_id: STOCK_NEW.unit_id,
+            version: createStock.body.data.version
+        });
+        expect(deleteStock.statusCode).to.equal(200);
+        expect(deleteStock.body.data).to.be.an('object');
+        expect(deleteStock.body.requestId).to.be.a('number');
+        expect(deleteStock.body.errors).to.be.an('array');
+        expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
 
     // ----------GET ONE-----------
@@ -84,12 +109,33 @@ describe('API Warehouse', () => {
     });
 
     it('should return one stock', async () => {
-        const stock = await chai.request(URL).get('/stock/1');
+        const createStock = await chai.request(URL).post('/stock').send(STOCK_NEW);
+        expect(createStock.statusCode).to.equal(201);
+        expect(createStock.body.data).to.be.an('object');
+        expect(createStock.body.requestId).to.be.a('number');
+        expect(createStock.body.errors).to.be.an('array');
+        expect(createStock.body.errors).to.be.an('array').that.eql([]);
+
+        const stock = await chai.request(URL).get(`/stock/${createStock.body.data.id}`);
         expect(stock.statusCode).to.equal(200);
         expect(stock.body.data).to.be.an('object');
         expect(stock.body.requestId).to.be.a('number');
         expect(stock.body.errors).to.be.an('array');
         expect(stock.body.errors).to.be.an('array').that.eql([]);
+
+        const deleteStock = await chai.request(URL).delete('/stock').send({
+            id: createStock.body.data.id,
+            quantity: STOCK_NEW.quantity,
+            location_id: STOCK_NEW.location_id,
+            product_id: STOCK_NEW.product_id,
+            unit_id: STOCK_NEW.unit_id,
+            version: createStock.body.data.version
+        });
+        expect(deleteStock.statusCode).to.equal(200);
+        expect(deleteStock.body.data).to.be.an('object');
+        expect(deleteStock.body.requestId).to.be.a('number');
+        expect(deleteStock.body.errors).to.be.an('array');
+        expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
 
     // ----------GET ERROR-----------
@@ -734,20 +780,48 @@ describe('API Warehouse', () => {
         expect(deleteStock.body.requestId).to.be.a('number');
         expect(deleteStock.body.errors).to.be.an('array');
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
+
+        const deleteLocation = await chai.request(URL).delete(`/location/${location.body.data.id}`);
+        expect(deleteLocation.statusCode).to.equal(200);
+        expect(deleteLocation.body.data).to.be.an('object');
+        expect(deleteLocation.body.requestId).to.be.a('number');
+        expect(deleteLocation.body.errors).to.be.an('array');
+        expect(deleteLocation.body.errors).to.be.an('array').that.eql([]);
     });
 
     // ---------- GET LOCATION STOCK -----------
     it('should count the location stock', async () => {
+        const createStock = await chai.request(URL).post('/stock').send(STOCK_NEW);
+        expect(createStock.statusCode).to.equal(201);
+        expect(createStock.body.data).to.be.an('object');
+        expect(createStock.body.requestId).to.be.a('number');
+        expect(createStock.body.errors).to.be.an('array');
+        expect(createStock.body.errors).to.be.an('array').that.eql([]);
+
         const locationStock = await chai.request(URL).get('/stock/count-location/1');
         expect(locationStock.statusCode).to.equal(200);
         expect(locationStock.body.data).to.be.an('object');
         expect(locationStock.body.requestId).to.be.a('number');
         expect(locationStock.body.errors).to.be.an('array');
         expect(locationStock.body.errors).to.be.an('array').that.eql([]);
+
+        const deleteStock = await chai.request(URL).delete('/stock').send({
+            id: createStock.body.data.id,
+            quantity: STOCK_NEW.quantity,
+            location_id: STOCK_NEW.location_id,
+            product_id: STOCK_NEW.product_id,
+            unit_id: STOCK_NEW.unit_id,
+            version: createStock.body.data.version
+        });
+        expect(deleteStock.statusCode).to.equal(200);
+        expect(deleteStock.body.data).to.be.an('object');
+        expect(deleteStock.body.requestId).to.be.a('number');
+        expect(deleteStock.body.errors).to.be.an('array');
+        expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
 
     // ---------- GET LOCATION STOCK ERROR -----------
-    it('should count the location stock', async () => {
+    it('should return 500 if the location does not exist', async () => {
         const locationStock = await chai.request(URL).get('/stock/count-location/9999');
         expect(locationStock.statusCode).to.equal(500);
         expect(locationStock.body.requestId).to.be.a('number');

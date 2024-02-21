@@ -5,6 +5,15 @@ const warehouse = require('../api/warehouse');
 const tenantdb = require('../api/tenantdb');
 // const requestQuery = require('../api/requestQuery');
 
+router.delete(('/'), async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const sql = 'DELETE FROM register;';
+    const sql1 = 'DELETE FROM STOCK;';
+    await conn.execute(sql);
+    await conn.execute(sql1);
+    res.status(200).json();
+});
+
 /**
  * @swagger
  * definitions:

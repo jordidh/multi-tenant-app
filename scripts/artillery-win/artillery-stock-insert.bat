@@ -16,5 +16,5 @@ INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio 
 INSERT INTO location (id, code, description) VALUES (1, 'UBIC01', 'description 1'), (2, 'UBIC02', 'description 2'); ^
 INSERT INTO `stock` (id, quantity, location_id, product_id, unit_id) VALUES (1, 100, 1, 1, 1), (2, 7, 1, 1, 2);"
 
-start cmd /c "artillery run ./test/stock-create.yml"
-start cmd /c "artillery run ./test/stock-divide.yml"
+start cmd /c "artillery run ./test/artillery/stock-create.yml"
+start cmd /c "artillery run ./test/artillery/stock-divide.yml"

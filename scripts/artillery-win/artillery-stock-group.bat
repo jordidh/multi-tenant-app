@@ -3,7 +3,7 @@ echo Connection to database...
 echo.
 
 rem get the path to the .env file
-set "env_file=%~dp0..\.env"
+set "env_file=%~dp0..\..\.env"
 
 rem Read the .env file variables
 for /f "tokens=1,* delims==" %%a in ('type "%env_file%"') do set "%%a=%%b"

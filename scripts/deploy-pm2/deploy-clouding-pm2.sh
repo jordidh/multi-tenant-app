@@ -148,7 +148,7 @@ sudo bash -c 'echo "DB_PASSWORD='$mysqlPassword'" >> .env'
 
 printf "\n*** PAS 3: Instal·lació de dependències\n"
 
-printf "\n -->Instal·lem les dependències de onion-cargo-loading-service\n"
+printf "\n -->Instal·lem les dependències de multi-tenant-app\n"
 sudo npm install
 
 printf "\n*** PAS 4: Instal·lació de NGINX\n"
@@ -184,7 +184,7 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/cert
 # Configure nginx
 # ===============
 # Override the configuration of: /etc/nginx/sites-available/default
-cp /home/root/multitenant/multi-tenant-app/scripts/deploy-pm2/nginx-default /etc/nginx/sites-available/default
+sudo cp /home/root/multitenant/multi-tenant-app/scripts/deploy-pm2/nginx-default /etc/nginx/sites-available/default
 
 # Test and apply changes: 
 sudo nginx -t
@@ -212,13 +212,13 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$mysqlUsername'@'localhost' WITH 
 # NOTA: Aquesta importació no acaba de funcionar, quan onion s'hi connecta falla
 # S'executa amb l'usuari onion per tenir permisos
 #mysql < /var/lib/onion/apps-conf/onion/cbwms-dump-v16.114.sql
-sudo mysql < /home/root/onion/onion-cargo-loading-service/scripts/sql/database.sql
+sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_creation.sql
 
 
 printf "\n*** PAS 6: Creem els serveis al pm2\n"
-cd /home/root/onion/onion-cargo-loading-service
+cd /home/root/multitenant/multi-tenant-app
 # Creem el servei pm2
-NODE_ENV=production PORT=8080 pm2 start ./bin/www --name OnionCargoLoading --max-memory-restart 1G
+NODE_ENV=production PORT=3000 pm2 start ./bin/www --name MultitenantApp --max-memory-restart 1G
 pm2 save
 pm2 startup
 

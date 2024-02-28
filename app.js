@@ -96,22 +96,26 @@ async function getAllDatabase () {
     }
 }
 
+/**
+ * Creates an user 'user_test' and a connection for the 'db_test' database.
+ */
 async function setDbTestConnection () {
-    let conn = await database.getPromisePool().getConnection();
+    const conn = await database.getPromisePool().getConnection();
     try {
         let sql = 'SELECT user FROM mysql.user WHERE user = ?';
         let resultQuery = await conn.execute(sql, ['user_test']);
-        if (resultQuery[0].length === 0) {
-            sql = 'CREATE USER "user_test"@"localhost" IDENTIFIED BY "root"';
+        if (resultQuery[0].length === 1) {
+            sql = 'DROP USER "user_test"@"localhost";';
             resultQuery = await conn.execute(sql);
-            if (resultQuery.length !== 2) throw new Error('User not created');
-            const userPrivilege = await conn.execute('GRANT ALL PRIVILEGES ON `db_test`.* TO "user_test"@"localhost";');
-            if (userPrivilege.length !== 2) throw new Error('User privileges not conceded');
-
-            const flushPrivileges = await conn.execute('FLUSH PRIVILEGES');
-            if (flushPrivileges.length !== 2) throw new Error('Flush privileges not executed');
         }
+        sql = 'CREATE USER "user_test"@"localhost" IDENTIFIED BY "root"';
+        resultQuery = await conn.execute(sql);
+        if (resultQuery.length !== 2) throw new Error('User not created');
+        const userPrivilege = await conn.execute('GRANT ALL PRIVILEGES ON `db_test`.* TO "user_test"@"localhost";');
+        if (userPrivilege.length !== 2) throw new Error('User privileges not conceded');
 
+        const flushPrivileges = await conn.execute('FLUSH PRIVILEGES');
+        if (flushPrivileges.length !== 2) throw new Error('Flush privileges not executed');
         const dbTest = {
             id: 999,
             db_host: 'localhost',
@@ -122,8 +126,7 @@ async function setDbTestConnection () {
             connectionLimit: 10
         };
 
-        tenantdb.addConnection(dbTest);
-        conn = await tenantdb.getPromisePool(999).getConnection();
+        await tenantdb.addConnection(dbTest);
     } catch (error) {
         logger.error('Error creating database db_test:', error);
     }

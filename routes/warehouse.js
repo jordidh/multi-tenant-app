@@ -6,7 +6,7 @@ const tenantdb = require('../api/tenantdb');
 // const requestQuery = require('../api/requestQuery');
 
 router.delete(('/'), async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
     const sql = 'DELETE FROM register;';
     const sql1 = 'DELETE FROM STOCK;';
     await conn.execute(sql);
@@ -113,7 +113,7 @@ router.delete(('/'), async function (req, res, next) {
  */
 
 router.get('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -158,7 +158,7 @@ router.get('/location', async function (req, res, next) {
  */
 
 router.get('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -200,7 +200,7 @@ router.get('/location/:id', async function (req, res, next) {
  */
 
 router.post('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -256,7 +256,7 @@ router.post('/location', async function (req, res, next) {
  */
 
 router.put('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -308,7 +308,7 @@ router.put('/location/:id', async function (req, res, next) {
  */
 
 router.delete('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -376,7 +376,7 @@ router.delete('/location/:id', async function (req, res, next) {
  */
 
 router.get('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -464,7 +464,7 @@ router.get('/stock/:id', async function (req, res, next) {
  */
 
 router.post('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -520,7 +520,7 @@ router.post('/stock', async function (req, res, next) {
  */
 
 router.put('/stock/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -569,7 +569,7 @@ router.put('/stock/:id', async function (req, res, next) {
  */
 
 router.delete('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -624,7 +624,7 @@ router.delete('/stock', async function (req, res, next) {
  */
 
 router.post('/stock/fusion', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -674,7 +674,7 @@ router.post('/stock/fusion', async function (req, res, next) {
  */
 
 router.post('/stock/divide', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -726,7 +726,7 @@ router.post('/stock/divide', async function (req, res, next) {
  */
 
 router.post('/stock/group', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -786,7 +786,7 @@ router.post('/stock/group', async function (req, res, next) {
  */
 
 router.post('/stock/ungroup', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -847,7 +847,7 @@ router.post('/stock/ungroup', async function (req, res, next) {
  */
 
 router.post('/stock/change-location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -896,7 +896,7 @@ router.post('/stock/change-location', async function (req, res, next) {
  */
 
 router.get('/stock/count-location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');

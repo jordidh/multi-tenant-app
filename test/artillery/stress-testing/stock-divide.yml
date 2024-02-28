@@ -1,0 +1,30 @@
+config:
+  # This is a test server run by team Artillery
+  # It's designed to be highly scalable
+  target: http://localhost:3000/warehouse
+  phases:
+    - duration: 10
+      arrivalRate: 50
+      rampTo: 100
+      name: "Case: 1 virtual users to 10 in 15 seconds"
+scenarios:
+  - flow:
+    - loop:
+      - log: "Divide stock"
+      - post: 
+          url: "/stock/divide"
+          json: [
+            {
+              id: 1,
+              quantity: 0,
+              location_id: 1,
+              product_id: 1,
+              unit_id: 1,
+              version: 0
+            },
+            {
+              quantity: 2
+            }
+          ]
+      count: 2
+# artillery run ./test/artillery/stock-divide.yml

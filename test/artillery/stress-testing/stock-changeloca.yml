@@ -3,9 +3,9 @@ config:
   # It's designed to be highly scalable
   target: http://localhost:3000/warehouse
   phases:
-    - duration: 15
-      arrivalRate: 1
-      rampTo: 1
+    - duration: 10
+      arrivalRate: 50
+      rampTo: 100
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
@@ -15,19 +15,7 @@ scenarios:
           url: "/stock/change-location"
           json: [
             {
-              id: 2,
-              location_id: 2,
-              version: 0
-            },
-            {
-              id: 1
-            }
-          ]
-      - post: 
-          url: "/stock/change-location"
-          json: [
-            {
-              id: 2,
+              id: 1,
               location_id: 1,
               version: 0
             },
@@ -35,6 +23,18 @@ scenarios:
               id: 2
             }
           ]
+      - post: 
+          url: "/stock/change-location"
+          json: [
+            {
+              id: 1,
+              location_id: 2,
+              version: 0
+            },
+            {
+              id: 1
+            }
+          ]
       count: 2
 
-# artillery run ./test/stock-changelocb.yml
+# artillery run ./test/artillery/stock-changeloca.yml

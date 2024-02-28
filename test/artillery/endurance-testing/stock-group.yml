@@ -3,9 +3,9 @@ config:
   # It's designed to be highly scalable
   target: http://localhost:3000/warehouse
   phases:
-    - duration: 15
-      arrivalRate: 1
-      rampTo: 10
+    - duration: 300
+      arrivalRate: 20
+      rampTo: 20
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
@@ -28,4 +28,4 @@ scenarios:
                 }
             ]
       count: 3
-# artillery run ./test/stock-group.yml
+# artillery run ./test/artillery/stock-group.yml

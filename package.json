@@ -7,6 +7,7 @@
     "test": "node ./node_modules/mocha/bin/mocha",
     "test-apis": "node ./node_modules/mocha/bin/mocha ./test/api/",
     "test-routes": "node ./bin/www & P1=$! && sleep 2 && node ./node_modules/mocha/bin/mocha ./test/routes/v1/ && kill $P1",
+    "test-routes-win": "start cmd /c node ./bin/www && ping -n 3 127.0.0.1 > nul && node ./node_modules/mocha/bin/mocha ./test/routes/v1/ && taskkill /F /IM node.exe",
     "test-eslint": "eslint app.js bin/www routes/*.js api/*.js"
   },
   "pre-commit": [
@@ -24,6 +25,8 @@
     "morgan": "~1.9.1",
     "mysql2": "^3.6.1",
     "pug": "^3.0.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "uniqid": "^5.4.0",
     "winston": "^3.10.0"
   },

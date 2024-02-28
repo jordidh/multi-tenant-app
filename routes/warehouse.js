@@ -3,202 +3,851 @@ const router = express.Router();
 const logger = require('../api/logger');
 const warehouse = require('../api/warehouse');
 const tenantdb = require('../api/tenantdb');
+// const requestQuery = require('../api/requestQuery');
 
-router.get('/', function (req, res, next) {
+router.delete(('/'), async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const sql = 'DELETE FROM register;';
+    const sql1 = 'DELETE FROM STOCK;';
+    await conn.execute(sql);
+    await conn.execute(sql1);
+    res.status(200).json();
 });
+
+/**
+ * @swagger
+ * definitions:
+ *   schemas:
+ *     Location:
+ *       tags:
+ *         - Location
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: string
+ *           description: the location code, must be unique
+ *           example: LOC01
+ *         description:
+ *           type: string
+ *           description: the location description
+ *           example: new location
+ *       required: ['code']
+ */
+
+/**
+ * @swagger
+ * definitions:
+ *   schemas:
+ *     Stock:
+ *       tags:
+ *         - Stock
+ *       type: object
+ *       properties:
+ *         quantity:
+ *           type: integer
+ *           description: the location code, must be unique
+ *           example: 5
+ *         location_id:
+ *           type: integer
+ *           description: the location id
+ *           example: 1
+ *         product_id:
+ *           type: integer
+ *           description: the location description
+ *           example: 1
+ *         unit_id:
+ *           type: integer
+ *           description: the location description
+ *           example: 1
+ *       required: ['quantity', 'location_id', 'product_id', 'unit_id']
+ */
+
+/**
+ * @swagger
+ * /warehouse/location:
+ *   get:
+ *     tags:
+ *       - Location
+ *     summary: Returns locations
+ *     description: Returns all the locations with limits
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: query
+ *         name: filter
+ *         description: Filter the locations by 'property:rule:value'. Rules=>
+ *           EQUALS='eq', NOT_EQUALS='neq', GREATER_THAN='gt', GREATER_THAN_OR_EQUALS='gte', LESS_THAN='lt', LESS_THAN_OR_EQUALS='lte',
+ *           LIKE='like', NOT_LIKE='nlike', IN='in', NOT_IN='nin', IS_NULL='isnull', IS_NOT_NULL='isnotnull'.
+ *           (Don't forget the comma between two diferent filter).
+ *         example: version:lt:5
+ *         schema:
+ *           type: string
+ *         required: false
+ *       - in: query
+ *         name: sort
+ *         description: Sort the locations by 'property:order'. (Don't forget the comma between two diferent sort).
+ *         example: version:ASC
+ *         schema:
+ *           type: string
+ *         required: false
+ *       - in: query
+ *         name: skip
+ *         description: Number of locations to skip
+ *         schema:
+ *           type: integer
+ *         required: false
+ *       - in: query
+ *         name: limit
+ *         description: Max. number of elements to return
+ *         schema:
+ *           type: integer
+ *         required: false
+ *     responses:
+ *       200:
+ *         description: ApiResult object with all locations found in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               $ref: '#/definitions/ApiResult'
+ */
+
+router.get('/location', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
+
+    await conn.execute('set session transaction isolation level repeatable read');
+    const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
+    logger.info(isolationLevel[0][0]['@@transaction_isolation']);
+
+    const ApiResult = await warehouse.getLocations(conn, req.query);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location read successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
+});
+
+/**
+ * @openapi
+ * /warehouse/location/{id}:
+ *   get:
+ *     tags:
+ *       - Location
+ *     summary: get a location
+ *     description: Get the location information using it's id.
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the location ID to perform a search
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
+
+router.get('/location/:id', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
+
+    await conn.execute('set session transaction isolation level repeatable read');
+    const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
+    logger.info(isolationLevel[0][0]['@@transaction_isolation']);
+
+    const ApiResult = await warehouse.getLocation(conn, req.params);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location read successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
+});
+
+/**
+ * @openapi
+ * /warehouse/location:
+ *   post:
+ *     tags:
+ *       - Location
+ *     summary: add location
+ *     description: Creates a new location.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/definitions/schemas/Location'
+ *     responses:
+ *       201:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
 
 router.post('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const result = await await warehouse.createLocation(conn, req.body);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await await warehouse.createLocation(conn, req.body);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location created successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
 
-router.delete('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+/**
+ * @openapi
+ * /warehouse/location/{id}:
+ *   put:
+ *     tags:
+ *       - Location
+ *     summary: update location
+ *     description: Updates the location that matches with the id using the values of the object below.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the location ID to perform a search
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/definitions/schemas/Location'
+ *     responses:
+ *       200:
+ *         description: update location
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 data:
+ *                   type: object
+ *                   items:
+ *                     type: object
+ */
+
+router.put('/location/:id', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
+
+    await conn.execute('set session transaction isolation level repeatable read');
+    const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
+    logger.info(isolationLevel[0][0]['@@transaction_isolation']);
+    logger.info(req.body.code);
+    const ApiResult = await warehouse.updateLocation(conn, req.params.id, req.body);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location updated successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
+});
+
+/**
+ * @openapi
+ * /warehouse/location/{id}:
+ *   delete:
+ *     tags:
+ *       - Location
+ *     summary: delete location
+ *     description: Deletes the stock with the id inserted.
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the stock ID to perform a search
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: delete location
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 data:
+ *                   type: object
+ *                   items:
+ *                     type: object
+ */
+
+router.delete('/location/:id', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const result = await warehouse.deleteLocation(conn, req.body);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.deleteLocation(conn, req.params);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location deleted successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
 
-router.put('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+/**
+ * @swagger
+ * /warehouse/stock:
+ *   get:
+ *     tags:
+ *       - Stock
+ *     summary: Returns stocks
+ *     description: Returns all the stocks with limits
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: query
+ *         name: filter
+ *         description: Filter the stocks by 'property:rule:value'. Rules=>
+ *           EQUALS='eq', NOT_EQUALS='neq', GREATER_THAN='gt', GREATER_THAN_OR_EQUALS='gte', LESS_THAN='lt', LESS_THAN_OR_EQUALS='lte',
+ *           LIKE='like', NOT_LIKE='nlike', IN='in', NOT_IN='nin', IS_NULL='isnull', IS_NOT_NULL='isnotnull'.
+ *           (Don't forget the comma between two diferent filter).
+ *         example: quantity:gt:5
+ *         schema:
+ *           type: string
+ *         required: false
+ *       - in: query
+ *         name: sort
+ *         description: Sort the stocks by 'property:order'. (Don't forget the comma between two diferent sort).
+ *         example: quantity:ASC
+ *         schema:
+ *           type: string
+ *         required: false
+ *       - in: query
+ *         name: skip
+ *         description: Number of stocks to skip
+ *         schema:
+ *           type: integer
+ *         required: false
+ *       - in: query
+ *         name: limit
+ *         description: Max. number of elements to return
+ *         schema:
+ *           type: integer
+ *         required: false
+ *     responses:
+ *       200:
+ *         description: ApiResult object with all stocks found in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               $ref: '#/definitions/ApiResult'
+ */
+
+router.get('/stock', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const sql = 'SELECT version from location where id = ?';
-    const version = await conn.execute(sql, [req.body.id]);
-    req.body.version = version[0][0].version;
-
-    const result = await warehouse.updateLocation(conn, req.body);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.getStocks(conn, req.query);
+    console.log(res.body);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stocks read successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
+
+/**
+ * @openapi
+ * /warehouse/stock/{id}:
+ *   get:
+ *     tags:
+ *       - Stock
+ *     summary: get a stock
+ *     description: Get the stock information using it's id.
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the stock ID to perform a search
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
+
+router.get('/stock/:id', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
+
+    await conn.execute('set session transaction isolation level repeatable read');
+    const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
+    logger.info(isolationLevel[0][0]['@@transaction_isolation']);
+
+    const ApiResult = await warehouse.getStock(conn, req.params);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock read successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
+});
+
+/**
+ * @openapi
+ * /warehouse/stock:
+ *   post:
+ *     tags:
+ *       - Stock
+ *     summary: add stock
+ *     description: Creates a new stock.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/definitions/schemas/Stock'
+ *     responses:
+ *       201:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
 
 router.post('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const result = await warehouse.createStock(conn, req.body);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.createStock(conn, req.body);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock created successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
+
+/**
+ * @openapi
+ * /warehouse/stock/{id}:
+ *   put:
+ *     tags:
+ *       - Stock
+ *     summary: update location
+ *     description: Updates the stock replacing it's values with the ones inserted (except id and version).
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the stock ID to perform a search
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/definitions/schemas/Stock'
+ *     responses:
+ *       200:
+ *         description: update stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 data:
+ *                   type: object
+ *                   items:
+ *                     type: object
+ */
+
+router.put('/stock/:id', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
+
+    await conn.execute('set session transaction isolation level repeatable read');
+    const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
+    logger.info(isolationLevel[0][0]['@@transaction_isolation']);
+    logger.info(req.body.location_id);
+    const ApiResult = await warehouse.updateStock(conn, req.params.id, req.body);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock updated successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
+});
+
+/**
+ * @openapi
+ * /warehouse/stock:
+ *   delete:
+ *     tags:
+ *       - Stock
+ *     summary: delete location
+ *     description: Deletes the stock with the id inserted.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/definitions/schemas/Stock'
+ *     responses:
+ *       200:
+ *         description: delete stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 data:
+ *                   type: object
+ *                   items:
+ *                     type: object
+ */
 
 router.delete('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const result = await warehouse.deleteStock(conn, req.body);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.deleteStock(conn, req.body);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock deleted successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
 
-router.put('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
-
-    await conn.execute('set session transaction isolation level repeatable read');
-    const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
-    logger.info(isolationLevel[0][0]['@@transaction_isolation']);
-
-    const sql = 'SELECT version from stock where id = ?';
-    const version = await conn.execute(sql, [req.body.id]);
-    req.body.version = version[0][0].version;
-
-    const result = await warehouse.updateStock(conn, req.body);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
-    }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
-});
+/**
+ * @openapi
+ * /warehouse/stock/fusion:
+ *   post:
+ *     tags:
+ *       - Stock
+ *     summary: fusion stocks
+ *     description: Fusion the two stocks into the first one and deletes the second stock.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *           example:
+ *             - id: 1
+ *               quantity: 5
+ *               location_id: 1
+ *               product_id: 1
+ *               unit_id: 1
+ *               version: 0
+ *             - id: 3
+ *               quantity: 15
+ *               location_id: 1
+ *               product_id: 1
+ *               unit_id: 1
+ *               version: 0
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
 
 router.post('/stock/fusion', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const sql = 'SELECT version from stock where id = ?';
-    const version = await conn.execute(sql, [req.body[0].id]);
-    req.body[0].version = version[0][0].version;
-
-    const result = await warehouse.fusionStock(conn, req.body[0], req.body[1]);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.fusionStock(conn, req.body[0], req.body[1]);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock merged successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
+
+/**
+ * @openapi
+ * /warehouse/stock/divide:
+ *   post:
+ *     tags:
+ *       - Stock
+ *     summary: divides stock
+ *     description: Divides the stock and creates a new stock with a quantity equal to the one inserted.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *           example:
+ *             - id: 1
+ *               quantity: 5
+ *               location_id: 1
+ *               product_id: 1
+ *               unit_id: 1
+ *               version: 0
+ *             - quantity: 20
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               $ref: '#/definitions/ApiResult'
+ */
 
 router.post('/stock/divide', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const sql = 'SELECT version from stock where id = ?';
-    const version = await conn.execute(sql, [req.body[0].id]);
-    req.body[0].version = version[0][0].version;
-
-    const result = await warehouse.divideStock(conn, req.body[0], req.body[1].quantity);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.divideStock(conn, req.body[0], req.body[1].quantity);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock divided successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
+
+/**
+ * @openapi
+ * /warehouse/stock/group:
+ *   post:
+ *     tags:
+ *       - Stock
+ *     summary: groups a stock
+ *     description: Groups the stock into one with higher base_unit.
+ *       The data of the second object of the array, corresponds to the unit which you want to change the stock. The response shows the initial stock after being grouped and the stock with a higher base_unit.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *           example:
+ *             - id: 1
+ *               quantity: 5
+ *               location_id: 1
+ *               product_id: 1
+ *               unit_id: 1
+ *               version: 0
+ *             - id: 2
+ *               base_unit: 10
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               $ref: '#/definitions/ApiResult'
+ */
 
 router.post('/stock/group', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    let sql = 'SELECT version from stock where id = ?';
-    let version = await conn.execute(sql, [req.body[0].id]);
-    req.body[0].version = version[0][0].version;
-
-    sql = 'SELECT quantity from stock where id = ?';
-    version = await conn.execute(sql, [req.body[0].id]);
-    req.body[0].quantity = version[0][0].quantity;
-
-    sql = 'SELECT version from unit where id = ?';
-    version = await conn.execute(sql, [req.body[1].id]);
-    req.body[1].version = version[0][0].version;
-
-    const result = await warehouse.groupStock(conn, req.body[0], req.body[1]);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const sql1 = 'SELECT * FROM stock where id = ?';
+    const resultQuery = await conn.execute(sql1, [req.body[0].id]);
+    if (resultQuery[0].length === 0) {
+        throw new Error('The Stock does not exist.');
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
+    req.body[0].version = resultQuery[0][0].version;
+    req.body[0].quantity = resultQuery[0][0].quantity;
+
+    const ApiResult = await warehouse.groupStock(conn, req.body[0], req.body[1]);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock grouped successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
 });
+
+/**
+ * @openapi
+ * /warehouse/stock/ungroup:
+ *   post:
+ *     tags:
+ *       - Stock
+ *     summary: ungroups a stock
+ *     description: Ungroups the stock into one with lower base_unit.
+ *       The data of the second object of the array, corresponds to the unit which you want to change the stock.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *           example:
+ *             - id: 2
+ *               quantity: 5
+ *               location_id: 1
+ *               product_id: 1
+ *               unit_id: 2
+ *               version: 0
+ *             - id: 1
+ *               base_unit: 1
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
 
 router.post('/stock/ungroup', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    let sql = 'SELECT version from stock where id = ?';
-    let version = await conn.execute(sql, [req.body[0].id]);
-    req.body[0].version = version[0][0].version;
-
-    sql = 'SELECT quantity from stock where id = ?';
-    version = await conn.execute(sql, [req.body[0].id]);
-    req.body[0].quantity = version[0][0].quantity;
-
-    sql = 'SELECT version from unit where id = ?';
-    version = await conn.execute(sql, [req.body[1].id]);
-    req.body[1].version = version[0][0].version;
-
-    const result = await warehouse.ungroupStock(conn, req.body[0], req.body[1]);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const sql1 = 'SELECT * FROM stock where id = ?';
+    const resultQuery = await conn.execute(sql1, [req.body[0].id]);
+    if (resultQuery[0].length === 0) {
+        throw new Error('The Stock does not exist.');
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
+    req.body[0].version = resultQuery[0][0].version;
+    req.body[0].quantity = resultQuery[0][0].quantity;
+
+    const ApiResult = await warehouse.ungroupStock(conn, req.body[0], req.body[1]);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Stock ungrouped successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    }
 });
 
+/**
+ * @openapi
+ * /warehouse/stock/change-location:
+ *   post:
+ *     tags:
+ *       - Stock
+ *     summary: Changes the location of a stock.
+ *     description: The first object is a stock and the second is it's new location.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *           example:
+ *             - id: 2
+ *               quantity: 5
+ *               location_id: 1
+ *               product_id: 1
+ *               unit_id: 2
+ *               version: 0
+ *             - id: 1
+ *               code: "LOC01"
+ *               description: "Location 1"
+ *               version: 0
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
+
 router.post('/stock/change-location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -208,27 +857,60 @@ router.post('/stock/change-location', async function (req, res, next) {
     const stock = await conn.execute(sql, [req.body[0].id]);
     req.body[0].version = stock[0][0].version;
 
-    const result = await warehouse.changeLocationStock(conn, req.body[0], req.body[1]);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.changeLocationStock(conn, req.body[0], req.body[1]);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location stock changed successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
 
-router.get('/stock/count-location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+/**
+ * @openapi
+ * /warehouse/stock/count-location/{id}:
+ *   get:
+ *     tags:
+ *       - Stock
+ *     summary: Counts the amount of a stock of a location
+ *     description: Counts the amount of a stock of a location using group by location_id.
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the location ID to perform a search
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: ApiResult object with created container in data attribute
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               $ref: '#/definitions/ApiResult'
+ */
+
+router.get('/stock/count-location/:id', async function (req, res, next) {
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
-    const result = await warehouse.countLocationStock(conn, req.query);
-    if (result.errors.length === 0) {
-        logger.info(result.data.message);
+    const ApiResult = await warehouse.countLocationStock(conn, req.params);
+    if (ApiResult.errors.length === 0) {
+        logger.info('Location stock counted successfully');
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
+    } else {
+        conn.release();
+        res.status(ApiResult.status).json(ApiResult);
     }
-    conn.release();
-    res.render('index', { title: 'nu+warehouses' });
 });
 
 module.exports = router;

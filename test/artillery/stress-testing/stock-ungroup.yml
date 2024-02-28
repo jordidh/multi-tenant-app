@@ -3,28 +3,29 @@ config:
   # It's designed to be highly scalable
   target: http://localhost:3000/warehouse
   phases:
-    - duration: 15
-      arrivalRate: 1
-      rampTo: 1
+    - duration: 10
+      arrivalRate: 50
+      rampTo: 100
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
     - loop:
-      - log: "Divide stock"
+      - log: "Ungroup stock"
       - post: 
-          url: "/stock/divide"
+          url: "/stock/ungroup"
           json: [
             {
-              id: 1,
-              quantity: 0,
+              id: 2,
+              quantity: 10,
               location_id: 1,
               product_id: 1,
-              unit_id: 1,
+              unit_id: 2,
               version: 0
             },
             {
-              quantity: 2
+              id: 1,
+              base_unit: 1
             }
           ]
-      count: 3
-# artillery run ./test/artillery/stock-divide.yml
+      count: 2
+# artillery run ./test/artillery/stock-ungroup.yml

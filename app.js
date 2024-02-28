@@ -40,7 +40,7 @@ if (!process.env.CRYPTO_ALG) {
 const db = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
-    database: process.env.DB_DATABASE || 'tenant_app',
+    database: process.env.DB_DATABASE || 'tenants_app',
     user: process.env.DB_USER || 'cbwms',
     password: process.env.DB_PASSWORD || '1qaz2wsx',
     connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
@@ -96,7 +96,41 @@ async function getAllDatabase () {
     }
 }
 
+async function setDbTestConnection () {
+    let conn = await database.getPromisePool().getConnection();
+    try {
+        let sql = 'SELECT user FROM mysql.user WHERE user = ?';
+        let resultQuery = await conn.execute(sql, ['user_test']);
+        if (resultQuery[0].length === 0) {
+            sql = 'CREATE USER "user_test"@"localhost" IDENTIFIED BY "root"';
+            resultQuery = await conn.execute(sql);
+            if (resultQuery.length !== 2) throw new Error('User not created');
+            const userPrivilege = await conn.execute('GRANT ALL PRIVILEGES ON `db_test`.* TO "user_test"@"localhost";');
+            if (userPrivilege.length !== 2) throw new Error('User privileges not conceded');
+
+            const flushPrivileges = await conn.execute('FLUSH PRIVILEGES');
+            if (flushPrivileges.length !== 2) throw new Error('Flush privileges not executed');
+        }
+
+        const dbTest = {
+            id: 999,
+            db_host: 'localhost',
+            db_port: 3306,
+            db_username: 'user_test',
+            db_password: 'root',
+            db_name: 'db_test',
+            connectionLimit: 10
+        };
+
+        tenantdb.addConnection(dbTest);
+        conn = await tenantdb.getPromisePool(999).getConnection();
+    } catch (error) {
+        logger.error('Error creating database db_test:', error);
+    }
+}
+
 getAllDatabase();
+setDbTestConnection();
 
 const app = express();
 

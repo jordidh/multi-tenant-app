@@ -3,15 +3,15 @@ config:
   # It's designed to be highly scalable
   target: http://localhost:3000/warehouse
   phases:
-    - duration: 15
-      arrivalRate: 1
-      rampTo: 10
+    - duration: 10
+      arrivalRate: 50
+      rampTo: 100
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
     - loop:
-      - log: "Update stock"
-      - put: 
+      - log: "Create stock"
+      - post: 
           url: "/stock"
           json: {
             id: 1,
@@ -21,5 +21,5 @@ scenarios:
             unit_id: 1,
             version: 0
           }
-      count: 3
-# artillery run ./test/artillery/stock-update.yml
+      count: 2
+# artillery run ./test/artillery/stock-create.yml

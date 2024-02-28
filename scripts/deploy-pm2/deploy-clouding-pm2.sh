@@ -55,6 +55,9 @@ sudo npm install pm2 -g
 pm2 completion install
 pm2 install pm2-logrotate
 
+# Artillery
+sudo npm install -g artillery
+
 # MySQL 8
 printf "\n Instal·lació de MySQL"
 sudo apt update
@@ -120,6 +123,11 @@ sudo mysql -e "CREATE USER '$mysqlUsername'@'localhost' IDENTIFIED WITH mysql_na
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$mysqlUsername'@'localhost' WITH GRANT OPTION;"
 sudo mysql -e "FLUSH PRIVILEGES;"
 
+# Remote user
+sudo mysql -e "CREATE USER 'remote_user'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
+sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'remote_user'@'%' WITH GRANT OPTION;"
+sudo mysql -e "FLUSH PRIVILEGES;"
+
 # Mostrem tots els usuaris creats
 sudo mysql -e "SELECT User, Host, plugin FROM mysql.user;"
 
@@ -145,6 +153,12 @@ sudo touch .env
 sudo bash -c 'echo "DB_HOST='127.0.0.1'" > .env'
 sudo bash -c 'echo "DB_USER='$mysqlUsername'" >> .env' 
 sudo bash -c 'echo "DB_PASSWORD='$mysqlPassword'" >> .env'
+sudo bash -c 'echo "DB_DATABASE='tenants_app'" >> .env'
+sudo bash -c 'echo "ARTILLERY_TEST_DB='db_test'" >> .env'
+sudo bash -c 'echo "MANDRILL_KEY='md-eW0fZoQylDpqBRjYQHzAiA'" >> .env'
+sudo bash -c 'echo "CRYPTO_KEY='1qazxsw23edcvfr45tgbnhy67ujmki89'" >> .env'
+sudo bash -c 'echo "CRYPTO_IV='1qazxsw23edcvfr4'" >> .env'
+sudo bash -c 'echo "CRYPTO_ALG='aes-256-cbc'" >> .env'
 
 printf "\n*** PAS 3: Instal·lació de dependències\n"
 
@@ -206,19 +220,21 @@ printf "\n --> Creem la BD pel servei\n"
 # Creem la BD i donem permisos a l'usuari onion
 # Per defecte creem el charset utf8mb4 que té com a default collation utf8mb4_0900_ai_ci (afecta a temes de cerca: ai=accent insensitive, ci=case insensitive)
 # només fem servir la opció -i (interactive) però no la (-t) de input device. Contrassenya sense $ ja que sinó no crea la contrasenya correctament
-sudo mysql -e "CREATE SCHEMA cargo_loading DEFAULT CHARACTER SET utf8mb4;"
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$mysqlUsername'@'localhost' WITH GRANT OPTION;"
+sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'remote_user'@'%' WITH GRANT OPTION;"
 #printf "\n --> Importem un dump amb el clientID ja establert per l'Onion. Aquesta BD ha de ser diferent per cada client\n"
 # NOTA: Aquesta importació no acaba de funcionar, quan onion s'hi connecta falla
 # S'executa amb l'usuari onion per tenir permisos
 #mysql < /var/lib/onion/apps-conf/onion/cbwms-dump-v16.114.sql
 sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_creation.sql
+# Script per crear la base de dades que fará servir els test artillery
+sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_tenant_test.sql
 
 
 printf "\n*** PAS 6: Creem els serveis al pm2\n"
 cd /home/root/multitenant/multi-tenant-app
 # Creem el servei pm2
-NODE_ENV=production PORT=3000 pm2 start ./bin/www --name MultitenantApp --max-memory-restart 1G
+NODE_ENV=production PORT=8080 pm2 start ./bin/www --name MultitenantApp --max-memory-restart 1G
 pm2 save
 pm2 startup
 

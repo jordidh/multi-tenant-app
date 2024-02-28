@@ -596,7 +596,7 @@ async function getBaseUnit (conn, stock) {
     const sql = 'SELECT base_unit FROM unit WHERE id = ?';
     const resultQuery = await conn.execute(sql, [stock.unit_id]);
     if (resultQuery[0].length !== 1) {
-        throw new Error('The unit does not exist.');
+        throw new Error('The stock unit does not exist.');
     }
     const quantity = resultQuery[0][0].base_unit;
     return quantity;

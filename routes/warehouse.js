@@ -422,7 +422,7 @@ router.get('/stock', async function (req, res, next) {
  */
 
 router.get('/stock/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(1).getConnection();
+    const conn = await tenantdb.getPromisePool(999).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -732,6 +732,14 @@ router.post('/stock/group', async function (req, res, next) {
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
 
+    const sql1 = 'SELECT * FROM stock where id = ?';
+    const resultQuery = await conn.execute(sql1, [req.body[0].id]);
+    if (resultQuery[0].length === 0) {
+        throw new Error('The Stock does not exist.');
+    }
+    req.body[0].version = resultQuery[0][0].version;
+    req.body[0].quantity = resultQuery[0][0].quantity;
+
     const ApiResult = await warehouse.groupStock(conn, req.body[0], req.body[1]);
     if (ApiResult.errors.length === 0) {
         logger.info('Stock grouped successfully');
@@ -783,6 +791,14 @@ router.post('/stock/ungroup', async function (req, res, next) {
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
+
+    const sql1 = 'SELECT * FROM stock where id = ?';
+    const resultQuery = await conn.execute(sql1, [req.body[0].id]);
+    if (resultQuery[0].length === 0) {
+        throw new Error('The Stock does not exist.');
+    }
+    req.body[0].version = resultQuery[0][0].version;
+    req.body[0].quantity = resultQuery[0][0].quantity;
 
     const ApiResult = await warehouse.ungroupStock(conn, req.body[0], req.body[1]);
     if (ApiResult.errors.length === 0) {

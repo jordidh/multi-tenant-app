@@ -4,28 +4,37 @@ config:
   target: http://localhost:3000/warehouse
   phases:
     - duration: 10
-      arrivalRate: 50
-      rampTo: 100
+      arrivalRate: 25
+      rampTo: 70
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
     - loop:
-      - log: "Ungroup stock"
+      - log: "Change location stock"
       - post: 
-          url: "/stock/ungroup"
+          url: "/stock/change-location"
           json: [
             {
               id: 2,
-              quantity: 10,
-              location_id: 1,
-              product_id: 1,
-              unit_id: 2,
+              location_id: 2,
               version: 0
             },
             {
-              id: 1,
-              base_unit: 1
+              id: 1
+            }
+          ]
+      - post: 
+          url: "/stock/change-location"
+          json: [
+            {
+              id: 2,
+              location_id: 1,
+              version: 0
+            },
+            {
+              id: 2
             }
           ]
       count: 2
-# artillery run ./test/artillery/stock-ungroup.yml
+
+# artillery run ./test/artillery/stock-changelocb.yml

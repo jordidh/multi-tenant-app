@@ -4,15 +4,15 @@ config:
   target: http://localhost:3000/warehouse
   phases:
     - duration: 10
-      arrivalRate: 50
-      rampTo: 100
+      arrivalRate: 30
+      rampTo: 150
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
     - loop:
       - log: "Divide stock"
       - post: 
-          url: "/stock/divide"
+          url: "/warehouse/stock/divide"
           json: [
             {
               id: 1,

@@ -3,9 +3,9 @@ config:
   # It's designed to be highly scalable
   target: http://localhost:3000/warehouse
   phases:
-    - duration: 300
-      arrivalRate: 20
-      rampTo: 20
+    - duration: 10
+      arrivalRate: 25
+      rampTo: 70
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:

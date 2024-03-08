@@ -16,8 +16,8 @@ INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio 
 INSERT INTO location (id, code, description) VALUES (1, 'UBIC01', 'description 1'), (2, 'UBIC02', 'description 2'); ^
 INSERT INTO stock (id, quantity, location_id, product_id, unit_id) VALUES (1, 55, 1, 1, 1), (2, 17, 2, 1, 1);"
 
-start cmd /k "artillery run ./test/artillery/docker-test/stock-group.yml"
-start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-ungroup.yml"
+start cmd /k "artillery run ./test/artillery/docker-test/stock-group.yml --target http://%IP_VM%:3000"
+start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-ungroup.yml --target http://%IP_VM%:3000"
 
 rem Connection to mysql using .env variables and execute the statements
 mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
@@ -27,8 +27,8 @@ INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio 
 INSERT INTO location (id, code, description) VALUES (1, 'UBIC01', 'description 1'), (2, 'UBIC02', 'description 2'); ^
 INSERT INTO stock (id, quantity, location_id, product_id, unit_id) VALUES (1, 55, 1, 1, 1), (2, 17, 2, 1, 1);"
 
-start  cmd /k "artillery run ./test/artillery/docker-test/stock-changeloca.yml"
-start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-changelocb.yml"
+start  cmd /k "artillery run ./test/artillery/docker-test/stock-changeloca.yml --target http://%IP_VM%:3000"
+start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-changelocb.yml --target http://%IP_VM%:3000"
 
 rem Connection to mysql using .env variables and execute the statements
 mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
@@ -38,8 +38,8 @@ INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio 
 INSERT INTO location (id, code, description) VALUES (1, 'UBIC01', 'description 1'), (2, 'UBIC02', 'description 2'); ^
 INSERT INTO stock (id, quantity, location_id, product_id, unit_id) VALUES (1, 55, 1, 1, 1), (2, 17, 2, 1, 1);"
 
-start cmd /k "artillery run ./test/artillery/docker-test/stock-create.yml"
-start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-divide.yml"
+start cmd /k "artillery run ./test/artillery/docker-test/stock-create.yml --target http://%IP_VM%:3000"
+start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-divide.yml --target http://%IP_VM%:3000"
 
 rem Connection to mysql using .env variables and execute the statements
 mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
@@ -49,7 +49,7 @@ INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio 
 INSERT INTO location (id, code, description) VALUES (1, 'UBIC01', 'description 1'), (2, 'UBIC02', 'description 2'); ^
 INSERT INTO stock (id, quantity, location_id, product_id, unit_id) VALUES (1, 55, 1, 1, 1), (2, 17, 2, 1, 1);"
 
-start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-update.yml"
+start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-update.yml --target http://%IP_VM%:3000"
 
 rem Connection to mysql using .env variables and execute the statements
 mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
@@ -59,4 +59,4 @@ INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio 
 INSERT INTO location (id, code, description) VALUES (1, 'UBIC01', 'description 1'), (2, 'UBIC02', 'description 2'); ^
 INSERT INTO stock (id, quantity, location_id, product_id, unit_id) VALUES (1, 55, 1, 1, 1), (2, 17, 2, 1, 1);"
 
-start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-get.yml"
+start /WAIT cmd /k "artillery run ./test/artillery/docker-test/stock-get.yml --target http://%IP_VM%:3000"

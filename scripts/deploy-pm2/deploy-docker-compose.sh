@@ -12,7 +12,7 @@ printf "\n\nConfiguration data:"
 #read -p "  Usuari de GitHub: " githubUsername
 #read -sp "  Contrasenya:" githubPassword
 printf "\n Data for MySQL\n"
-read -p "  User: " myuser
+# read -p "  User: " myuser
 read -sp "  Root Password: " mypass
 # Check if the enviroment variables are empty (no username or password)
 #if [ -z "$myuser" ]; then
@@ -26,7 +26,6 @@ fi
 # Export values for MySQL docker image
 # export MYSQL_USER=myuser
 export MYSQL_ROOT_PASSWORD=mypass
-export MYSQL_USER=myuser
 printf "\n** GET PROJECT REPOSITORY **\n"
 sudo mkdir -p /home/root
 cd /home/root
@@ -37,10 +36,10 @@ printf "\n** CREATE/MODIFY CONFIGURATION DB **\n"
 # Create the .env file with environtment variables 
 touch .env 
 sudo bash -c 'echo "DB_HOST='mysql'" > .env'
-sudo bash -c 'echo "DB_USER='$myuser'" >> .env'
 sudo bash -c 'echo "DB_PASSWORD='$mypass'" >> .env'
+sudo bash -c 'echo "DB_USER='root'" >> .env'
 sudo bash -c 'echo "DB_DATABASE='tenants_app'" >> .env'
-sudo bash -c 'echo "ARTILLERY_TEST_DB='db_test'" >> .env'
+sudo bash -c 'echo "DB_DATABASE_TEST='db_test'" >> .env'
 sudo bash -c 'echo "DB_USER_TEST='user_test'" >> .env'
 sudo bash -c 'echo "DB_PASSWORD_TEST='root'" >> .env'
 sudo bash -c 'echo "DB_HOST_TEST='%'" >> .env'
@@ -55,17 +54,19 @@ sed -i "s/mypass123/'$mypass'/g" docker-compose.yml
 
 # Give permissions to "MYSQL_USER"
 #docker-compose 
-echo "GRANT ALL PRIVILEGES ON cargo_loading.* TO '$myuser'@'localhost' WITH GRANT OPTION;" >> scripts/db/db_creation.sql
+# echo "GRANT ALL PRIVILEGES ON cargo_loading.* TO '$myuser'@'localhost' WITH GRANT OPTION;" >> scripts/db/db_creation.sql
 
 # Install docker-compose
 printf "\n** Installation docker-compose **\n"
 sudo apt update -y
 sudo apt install docker-compose -y
 
+sudo apt-get update
+sudo apt-get install openssh-server
+
 printf "\n** Creating SSL **\n"
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./cert.key -out ./cert.crt
 
 printf "\n** Building/Starting docker-compose **\n"
-docker-compose up -d
-docker-compose
+sudo docker-compose up --build
 printf "\n*** END ***\n"

@@ -1,18 +1,22 @@
 config:
   # This is a test server run by team Artillery
   # It's designed to be highly scalable
-  target: http://localhost:3000/warehouse
+  target: http://localhost:3000/
+  http:
+    timeout: 10
   phases:
     - duration: 10
-      arrivalRate: 25
-      rampTo: 70
+      arrivalRate: 10
+      rampTo: 30
+      # arrivalRate: 20
+      # rampTo: 100
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
     - loop:
       - log: "Ungroup stock"
       - post: 
-          url: "/stock/ungroup"
+          url: "/warehouse/stock/ungroup"
           json: [
             {
               id: 2,

@@ -9,7 +9,7 @@ rem Read the .env file variables
 for /f "tokens=1,* delims==" %%a in ('type "%env_file%"') do set "%%a=%%b"
 
 rem Connection to mysql using .env variables and execute the statements
-mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
+mysql -h %IP_CLOUDING% -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %DB_DATABASE_TEST% -e ^
 "DELETE FROM register; DELETE FROM stock; DELETE FROM location; DELETE FROM unit; DELETE FROM product;^
 INSERT INTO unit (id, code, description, base_unit) VALUES (1, 'UNIT01' ,'descripcio de prova1', 1), (2, 'UNIT02' ,'descripcio de prova', 10);^
 INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio de prova');^
@@ -20,7 +20,7 @@ start cmd /k "artillery run ./test/artillery/clouding/stock-group.yml --target h
 start /WAIT cmd /k "artillery run ./test/artillery/clouding/stock-ungroup.yml --target http://%IP_CLOUDING%:8080"
 
 rem Connection to mysql using .env variables and execute the statements
-mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
+mysql -h %IP_CLOUDING% -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %DB_DATABASE_TEST% -e ^
 "DELETE FROM register; DELETE FROM stock; DELETE FROM location; DELETE FROM unit; DELETE FROM product;^
 INSERT INTO unit (id, code, description, base_unit) VALUES (1, 'UNIT01' ,'descripcio de prova', 1), (2, 'UNIT02' ,'descripcio de prova', 10);^
 INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio de prova');^
@@ -31,7 +31,7 @@ start  cmd /k "artillery run ./test/artillery/clouding/stock-changeloca.yml --ta
 start /WAIT cmd /k "artillery run ./test/artillery/clouding/stock-changelocb.yml --target http://%IP_CLOUDING%:8080"
 
 rem Connection to mysql using .env variables and execute the statements
-mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
+mysql -h %IP_CLOUDING% -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %DB_DATABASE_TEST% -e ^
 "DELETE FROM register; DELETE FROM stock; DELETE FROM location; DELETE FROM unit; DELETE FROM product;^
 INSERT INTO unit (id, code, description, base_unit) VALUES (1, 'UNIT01' ,'descripcio de prova', 1), (2, 'UNIT02' ,'descripcio de prova', 10);^
 INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio de prova');^
@@ -42,7 +42,7 @@ start cmd /k "artillery run ./test/artillery/clouding/stock-create.yml --target 
 start /WAIT cmd /k "artillery run ./test/artillery/clouding/stock-divide.yml --target http://%IP_CLOUDING%:8080"
 
 rem Connection to mysql using .env variables and execute the statements
-mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
+mysql -h %IP_CLOUDING% -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %DB_DATABASE_TEST% -e ^
 "DELETE FROM register; DELETE FROM stock; DELETE FROM location; DELETE FROM unit; DELETE FROM product;^
 INSERT INTO unit (id, code, description, base_unit) VALUES (1, 'UNIT01' ,'descripcio de prova', 1), (2, 'UNIT02' ,'descripcio de prova', 10);^
 INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio de prova');^
@@ -52,7 +52,7 @@ INSERT INTO stock (id, quantity, location_id, product_id, unit_id) VALUES (1, 55
 start /WAIT cmd /k "artillery run ./test/artillery/clouding/stock-update.yml --target http://%IP_CLOUDING%:8080"
 
 rem Connection to mysql using .env variables and execute the statements
-mysql -h localhost -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %ARTILLERY_TEST_DB% -e ^
+mysql -h %IP_CLOUDING% -u %DB_USER_TEST% -p%DB_PASSWORD_TEST% -D %DB_DATABASE_TEST% -e ^
 "DELETE FROM register; DELETE FROM stock; DELETE FROM location; DELETE FROM unit; DELETE FROM product;^
 INSERT INTO unit (id, code, description, base_unit) VALUES (1, 'UNIT01' ,'descripcio de prova', 1), (2, 'UNIT02' ,'descripcio de prova', 10);^
 INSERT INTO product (id, code, description) VALUES (1, 'PRODUCT01' ,'descripcio de prova');^

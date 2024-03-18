@@ -1,0 +1,29 @@
+config:
+  # This is a test server run by team Artillery
+  # It's designed to be highly scalable
+  target: http://localhost:3000/
+  http:
+    timeout: 10
+  phases:
+    - duration: 10
+      # arrivalRate: 10
+      # rampTo: 40
+      arrivalRate: 30
+      rampTo: 180
+      name: "Case: 1 virtual users to 10 in 15 seconds"
+scenarios:
+  - flow:
+    - loop:
+      - log: "Create stock"
+      - post: 
+          url: "/warehouse/stock"
+          json: {
+            id: 1,
+            quantity: 2,
+            location_id: 1,
+            product_id: 1,
+            unit_id: 1,
+            version: 0
+          }
+      count: 2
+# artillery run ./test/artillery/stock-create.yml

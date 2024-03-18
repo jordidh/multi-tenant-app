@@ -143,7 +143,7 @@ sudo apt install zstd -y
 
 printf "\n*** PAS 2: Per cada aplicació, descarreguem el projecte de GitHub a dins del host (contenen un fitxer Dockerfile i .dockerignore que copia el projecte a dins del contenidor)\n"
 
-printf "\n --> Descarreguem de github el projecte del ONION\n"
+printf "\n --> Descarreguem de github el projecte de MULTITENANT\n"
 #git clone https://$githubUsername:$githubPassword@github.com/CodeBiting/XXXXXX.git
 cd /home/root/multitenant/
 sudo git clone https://github.com/Batr0s/multi-tenant-app.git
@@ -155,7 +155,10 @@ sudo bash -c 'echo "DB_USER='$mysqlUsername'" >> .env'
 sudo bash -c 'echo "DB_PASSWORD='$mysqlPassword'" >> .env'
 sudo bash -c 'echo "DB_DATABASE='tenants_app'" >> .env'
 sudo bash -c 'echo "ARTILLERY_TEST_DB='db_test'" >> .env'
-sudo bash -c 'echo "MANDRILL_KEY='md-eW0fZoQylDpqBRjYQHzAiA'" >> .env'
+sudo bash -c 'echo "DB_USER_TEST='user_test'" >> .env'
+sudo bash -c 'echo "DB_PASSWORD_TEST='root'" >> .env'
+sudo bash -c 'echo "DB_HOST_TEST='%'" >> .env'
+sudo bash -c 'echo "MANDRILL_KEY=''" >> .env'
 sudo bash -c 'echo "CRYPTO_KEY='1qazxsw23edcvfr45tgbnhy67ujmki89'" >> .env'
 sudo bash -c 'echo "CRYPTO_IV='1qazxsw23edcvfr4'" >> .env'
 sudo bash -c 'echo "CRYPTO_ALG='aes-256-cbc'" >> .env'
@@ -217,7 +220,7 @@ printf "\n*** PAS 5: Creació de la BD i els usuaris de BD\n"
 #printf "\n --> Esperem uns segons que el contenidor amb la BD estigui funcionant\n"
 #sleep 30
 printf "\n --> Creem la BD pel servei\n"
-# Creem la BD i donem permisos a l'usuari onion
+# Creem la BD i donem permisos a l'usuari
 # Per defecte creem el charset utf8mb4 que té com a default collation utf8mb4_0900_ai_ci (afecta a temes de cerca: ai=accent insensitive, ci=case insensitive)
 # només fem servir la opció -i (interactive) però no la (-t) de input device. Contrassenya sense $ ja que sinó no crea la contrasenya correctament
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$mysqlUsername'@'localhost' WITH GRANT OPTION;"
@@ -237,6 +240,5 @@ cd /home/root/multitenant/multi-tenant-app
 NODE_ENV=production PORT=8080 pm2 start ./bin/www --name MultitenantApp --max-memory-restart 1G
 pm2 save
 pm2 startup
-
 
 printf "\n*** FI ***\n"

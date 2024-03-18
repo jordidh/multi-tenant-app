@@ -1,0 +1,44 @@
+config:
+  # This is a test server run by team Artillery
+  # It's designed to be highly scalable
+  target: http://localhost:3000/
+  http:
+    timeout: 10
+  phases:
+    - duration: 10
+      # arrivalRate: 10
+      # rampTo: 40
+      arrivalRate: 30
+      rampTo: 180
+      name: "Case: 1 virtual users to 10 in 15 seconds"
+scenarios:
+  - flow:
+    - loop:
+      - log: "Change location stock"
+      - post: 
+          url: "/warehouse/stock/change-location"
+          json: [
+            {
+              id: 2,
+              location_id: 2,
+              version: 0
+            },
+            {
+              id: 1
+            }
+          ]
+      - post: 
+          url: "/warehouse/stock/change-location"
+          json: [
+            {
+              id: 2,
+              location_id: 1,
+              version: 0
+            },
+            {
+              id: 2
+            }
+          ]
+      count: 2
+
+# artillery run ./test/artillery/stock-changelocb.yml

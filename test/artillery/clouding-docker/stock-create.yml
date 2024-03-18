@@ -6,17 +6,17 @@ config:
     timeout: 10
   phases:
     - duration: 10
-      arrivalRate: 10
-      rampTo: 40
-      # arrivalRate: 20
-      # rampTo: 100
+      # arrivalRate: 10
+      # rampTo: 40
+      arrivalRate: 30
+      rampTo: 180
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:
     - loop:
-      - log: "Update stock"
-      - put: 
-          url: "/warehouse/stock/1"
+      - log: "Create stock"
+      - post: 
+          url: "/warehouse/stock"
           json: {
             id: 1,
             quantity: 2,
@@ -26,4 +26,4 @@ scenarios:
             version: 0
           }
       count: 2
-# artillery run ./test/artillery/stock-update.yml
+# artillery run ./test/artillery/stock-create.yml

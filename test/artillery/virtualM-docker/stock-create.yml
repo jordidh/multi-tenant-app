@@ -7,7 +7,7 @@ config:
   phases:
     - duration: 10
       arrivalRate: 10
-      rampTo: 30
+      rampTo: 40
       # arrivalRate: 20
       # rampTo: 100
       name: "Case: 1 virtual users to 10 in 15 seconds"

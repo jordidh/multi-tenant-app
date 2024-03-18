@@ -11,6 +11,18 @@ for /f "tokens=1,* delims==" %%a in ('type "%env_file%"') do set "%%a=%%b"
 rem Conexión SSH y ejecución del script en la máquina virtual
 ssh acandela@%IP_VM% "cd /home/root/multi-tenant-app/scripts/artillery && ./clean.sh"
 
+start cmd /k "artillery run ./test/artillery/virtualM-docker/stock-group.yml --target http://%IP_VM%:3000"
+start /WAIT cmd /k "artillery run ./test/artillery/virtualM-docker/stock-ungroup.yml --target http://%IP_VM%:3000"
+
+rem Conexión SSH y ejecución del script en la máquina virtual
+ssh acandela@%IP_VM% "cd /home/root/multi-tenant-app/scripts/artillery && ./clean.sh"
+
+start  cmd /k "artillery run ./test/artillery/virtualM-docker/stock-changeloca.yml --target http://%IP_VM%:3000"
+start /WAIT cmd /k "artillery run ./test/artillery/virtualM-docker/stock-changelocb.yml --target http://%IP_VM%:3000"
+
+rem Conexión SSH y ejecución del script en la máquina virtual
+ssh acandela@%IP_VM% "cd /home/root/multi-tenant-app/scripts/artillery && ./clean.sh"
+
 start cmd /k "artillery run ./test/artillery/virtualM-docker/stock-create.yml --target http://%IP_VM%:3000"
 start /WAIT cmd /k "artillery run ./test/artillery/virtualM-docker/stock-divide.yml --target http://%IP_VM%:3000"
 
@@ -24,14 +36,3 @@ ssh acandela@%IP_VM% "cd /home/root/multi-tenant-app/scripts/artillery && ./clea
 
 start /WAIT cmd /k "artillery run ./test/artillery/virtualM-docker/stock-get.yml --target http://%IP_VM%:3000"
 
-rem Conexión SSH y ejecución del script en la máquina virtual
-ssh acandela@%IP_VM% "cd /home/root/multi-tenant-app/scripts/artillery && ./clean.sh"
-
-start cmd /k "artillery run ./test/artillery/virtualM-docker/stock-group.yml --target http://%IP_VM%:3000"
-start /WAIT cmd /k "artillery run ./test/artillery/virtualM-docker/stock-ungroup.yml --target http://%IP_VM%:3000"
-
-rem Conexión SSH y ejecución del script en la máquina virtual
-ssh acandela@%IP_VM% "cd /home/root/multi-tenant-app/scripts/artillery && ./clean.sh"
-
-start  cmd /k "artillery run ./test/artillery/virtualM-docker/stock-changeloca.yml --target http://%IP_VM%:3000"
-start /WAIT cmd /k "artillery run ./test/artillery/virtualM-docker/stock-changelocb.yml --target http://%IP_VM%:3000"

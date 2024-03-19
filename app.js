@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const logger = require('./api/logger');
 const database = require('./api/database');
+const mysql = require('mysql2');
 const uniqid = require('uniqid');
 const tenantdb = require('./api/tenantdb');
 
@@ -13,6 +14,11 @@ const apiDocsV1 = require('./routes/v1/api-docs');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const warehouseRouter = require('./routes/warehouse');
+const cleanRouter = require('./routes/clean-db-test');
+
+const fs = require('fs');
+// 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
+const DBTESTSCRIPT = fs.readFileSync('scripts/db/db_test.sql', 'utf8');
 
 /* const nodemailer = require("nodemailer");
 var transporter=null; */
@@ -96,6 +102,29 @@ async function getAllDatabase () {
     }
 }
 
+async function createDBTest () {
+    // Connection to mysql db
+    const connToMySql = await mysql.createPool({
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'cbwms',
+        password: process.env.DB_PASSWORD || '1qaz2wsx',
+        database: 'mysql'
+    });
+    let conn = connToMySql.promise();
+
+    // Create the new DB
+    const dbCreated = await conn.execute('CREATE DATABASE IF NOT EXISTS db_test;');
+    if (dbCreated.length !== 2) throw new Error('Test database not created');
+
+    conn = await tenantdb.getPromisePool(999).getConnection();
+    const queries = DBTESTSCRIPT.split(';');
+    const validQueries = queries.filter(query => query.trim() !== '');
+    for (const query of validQueries) {
+        await conn.execute(query);
+    }
+}
+
 /**
  * Creates an user 'user_test' and a connection for the 'db_test' database.
  */
@@ -125,8 +154,17 @@ async function setDbTestConnection () {
             connectionLimit: 10
         };
         await tenantdb.addConnection(dbTest);
+        sql = 'SHOW DATABASES LIKE "db_test"';
+        resultQuery = await conn.execute(sql);
+        if (resultQuery[0].length === 1) {
+            sql = 'DROP DATABASE db_test';
+            resultQuery = await conn.execute(sql);
+            createDBTest();
+        } else {
+            createDBTest();
+        }
     } catch (error) {
-        logger.error('Error creating database db_test:', error);
+        logger.error('Error creating database db_test conection:', error);
     }
 }
 
@@ -163,6 +201,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/warehouse', warehouseRouter);
 app.use('/v1/api-docs', apiDocsV1);
+app.use('/clean-db-test', cleanRouter);
 
 /**
  * Generate one uniqueid everytime API is called, to trace the client call

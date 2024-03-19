@@ -1,9 +1,3 @@
-DROP DATABASE IF EXISTS db_test;
-
-CREATE DATABASE db_test;
-
-USE db_test;
-
 CREATE TABLE IF NOT EXISTS `location` (
     `id` SERIAL PRIMARY KEY,
     `code` VARCHAR(100) NOT NULL,

@@ -17,8 +17,6 @@ const warehouseRouter = require('./routes/warehouse');
 const cleanRouter = require('./routes/clean-db-test');
 
 const fs = require('fs');
-// 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
-const DBTESTSCRIPT = fs.readFileSync('scripts/db/db_test.sql', 'utf8');
 
 /* const nodemailer = require("nodemailer");
 var transporter=null; */
@@ -103,6 +101,8 @@ async function getAllDatabase () {
 }
 
 async function createDBTest () {
+    // 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
+    const DBTESTSCRIPT = fs.readFileSync('scripts/db/db_test.sql', 'utf8');
     // Connection to mysql db
     const connToMySql = await mysql.createPool({
         host: process.env.DB_HOST || 'localhost',

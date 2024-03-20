@@ -7,8 +7,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
     volumes:
-      - ./scripts/db/db_creation.sql:/docker-entrypoint-initdb.d/db_creation.sql
-      - ./scripts/db/db_tenant_test.sql:/docker-entrypoint-initdb.d/db_tenant_test.sql
+      - ./scripts/db/tenants_app.sql:/docker-entrypoint-initdb.d/tenants_app.sql
     ports:
       - "3306:3306"
     healthcheck:

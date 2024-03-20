@@ -90,7 +90,7 @@ async function getAllDatabase () {
                 user: resultQuery[0][0].db_username,
                 password: resultQuery[0][0].db_password,
                 database: resultQuery[0][0].db_name,
-                connectionLimit: process.env.DB_CONNECTION_LIMIT
+                connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
             };
             dbs.push(db);
         }
@@ -151,7 +151,7 @@ async function setDbTestConnection () {
             db_username: process.env.DB_USER_TEST,
             db_password: process.env.DB_PASSWORD_TEST,
             db_name: 'db_test',
-            connectionLimit: 10
+            connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
         };
         await tenantdb.addConnection(dbTest);
 

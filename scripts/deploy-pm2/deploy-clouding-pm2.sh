@@ -9,7 +9,7 @@
 
 printf "\n\n Recollim dades per fer la configuració"
 #printf "\n Dades de connexió amb el GITHUB\n"
-#read -p "  Usuari de GitHub: " githubUsername
+#read -p "  Usuari de GitHub: " githubUsername. --> l'usuari no pot ser 'root'
 #read -sp "  Contrasenya:" githubPassword
 printf "\n Dades de connexió amb MySQL\n"
 read -p "  Usuari de BD MySql: " mysqlUsername
@@ -229,9 +229,9 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'remote_user'@'%' WITH GRANT OPTIO
 # NOTA: Aquesta importació no acaba de funcionar, quan onion s'hi connecta falla
 # S'executa amb l'usuari onion per tenir permisos
 #mysql < /var/lib/onion/apps-conf/onion/cbwms-dump-v16.114.sql
-sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_creation.sql
+sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/tenants_app.sql
 # Script per crear la base de dades que fará servir els test artillery
-sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_tenant_test.sql
+sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_test.sql
 
 
 printf "\n*** PAS 6: Creem els serveis al pm2\n"
@@ -241,4 +241,4 @@ NODE_ENV=production PORT=8080 pm2 start ./bin/www --name MultitenantApp --max-me
 pm2 save
 pm2 startup
 
-printf "\n*** FI ***\n"
+printf "\n*** FI ***\n"pm2 logs MultitenantApp

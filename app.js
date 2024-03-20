@@ -154,6 +154,7 @@ async function setDbTestConnection () {
             connectionLimit: 10
         };
         await tenantdb.addConnection(dbTest);
+
         sql = 'SHOW DATABASES LIKE "db_test"';
         resultQuery = await conn.execute(sql);
         if (resultQuery[0].length === 1) {

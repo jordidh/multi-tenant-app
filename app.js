@@ -151,7 +151,7 @@ async function setDbTestConnection () {
             db_username: process.env.DB_USER_TEST,
             db_password: process.env.DB_PASSWORD_TEST,
             db_name: 'db_test',
-            connectionLimit: process.env.DB_CONNECTION_LIMIT
+            connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
         };
         await tenantdb.addConnection(dbTest);
 

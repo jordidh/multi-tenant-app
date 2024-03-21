@@ -199,3 +199,5 @@ L'usuari administrador del tenant ha de poder donar d'alta nous usuaris (nom d'u
 4. S'enviarà un email d'invitació i activació de l'usuari amb un enllaç a l'aplicació amb una període de validesa limitada..
 5. Quan el nou usuari prémi l'enllaç del email s'activarà l'usuari.
 6. El nou usuari ja podrà fer login a l'aplicació i haurà de poder veure les dades particulars de la seva organització.
+
+## Execució en docker run

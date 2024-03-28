@@ -84,3 +84,13 @@ CREATE TABLE `activationcodes` (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- CREATE TABLE `tokenblocklist` (
+--     `token` VARCHAR(255) NOT NULL UNIQUE,
+--     `expiration_date` TIMESTAMP DEFAULT NOW()
+-- );
+
+-- this table must be in every tenant
+-- CREATE TABLE `refreshToken` (
+--     `token` VARCHAR(255) NOT NULL UNIQUE,
+--     `expiration_date` TIMESTAMP DEFAULT NOW()
+-- );

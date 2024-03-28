@@ -4,27 +4,25 @@ block content
     nav
         ul
             li
-                a.leftspace(href='#') Applications
+                a.leftspace(href='') Applications
             li
                 a(href='#') Community
             li
                 a(href='#') Prices
             li
-                a.leftspace(href='#') Identify
+                a.leftspace(href='/login') Identify
             li
-                a(href='#') Register
+                a(href='/register') Register
 
     .container
         .column-left 
             h2 nu+warehouse
-            p
-                | Los mejores empleados merecen
-            p.big
-                | el mejor software
-            p
-                | La única plataforma que necesitarás para manejar tu almacén:
-            p
-                | aplicaciones integradas, sencillas, y adoradas por millones de usuarios felices.
+            form(action='/users/protected' method='post' onsubmit=`return validateRegister('${PATTERN_PASSWORD}', '${PASSNOTEQUAL}', '${ERRORPATTERNPASS}')` name='registerForm' )
+                input(type='text' name='token' value='')
+                input#submitof(name="submitCode" type='submit' value='Protected' style='width: 40%;')
+            form(action='/users/renew-access-token' method='post' onsubmit=`return validateRegister('${PATTERN_PASSWORD}', '${PASSNOTEQUAL}', '${ERRORPATTERNPASS}')` name='registerForm' )
+                input(type='text' name='token' value='')
+                input#submitof(name="submitCode" type='submit' value='Renew Acces token' style='width: 40%;')
         .column-image
             img(src='images/homepage-desktop.png' alt='Image 1')
     .section-gray

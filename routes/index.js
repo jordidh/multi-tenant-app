@@ -22,8 +22,10 @@ router.post('/login', async function (req, res, next) {
     if (loginResult.errors.length > 0) {
         res.render('login', { title: 'nu+warehouses', message: { type: 'error', text: `${loginResult.data}: ${loginResult.errors[0].message}` } });
     }
+    const accessToken = loginResult.data.accessToken;
+    const refreshToken = loginResult.data.refreshToken;
     // const conn = loginResult.data.conn;
-    res.render('login', { title: 'nu+warehouses' });
+    res.render('tenant', { title: 'nu+warehouses', accessToken, refreshToken });
 });
 
 router.get('/register', function (req, res, next) {

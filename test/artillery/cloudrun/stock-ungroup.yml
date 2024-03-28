@@ -7,7 +7,7 @@ config:
       # arrivalRate: 30
       # rampTo: 100
       arrivalRate: 30
-      rampTo: 300
+      rampTo: 200
       name: "Case: 1 virtual users to 10 in 15 seconds"
 scenarios:
   - flow:

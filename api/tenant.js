@@ -32,6 +32,8 @@ const PATTERN_PASSWORD = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^])[A-Za-z\d@$!%*
      *     $ asserts the end of the string.
      */
 
+const jwt = require('jsonwebtoken');
+
 module.exports = {
 
     PATTERN_PASSWORD,
@@ -195,7 +197,11 @@ module.exports = {
             if (isolationLevel.length !== 2) {
                 throw new Error('Transaction isolation level not established');
             }
-            return new ApiResult(200, { message: 'User verification successful.', conn }, 1, []);
+
+            const accessToken = await createAccessToken(user);
+            const refreshToken = await createRefreshToken(user);
+
+            return new ApiResult(200, { message: 'User verification successful.', conn, accessToken, refreshToken }, 1, []);
         } catch (e) {
             logger.error(`tenant.login(): Error logging user: ${e}`);
             logger.info('tenant.login(): Transaction rolled back');
@@ -204,6 +210,25 @@ module.exports = {
         }
     }
 };
+
+async function createAccessToken (user) {
+    const expiresIn = '60s';
+    const token = jwt.sign({ sub: user }, process.env.ACCESS_SECRET_KEY, {
+        expiresIn
+    });
+    console.log('Access token: ' + token);
+    return token;
+}
+// Access and refresh have different secret key.
+async function createRefreshToken (user) {
+    const expiresIn = '1d';
+    // const tokenId = crypto.randomUUID();
+    const token = jwt.sign({ sub: user }, process.env.REFRESH_SECRET_KEY, {
+        expiresIn
+    });
+    console.log('Refresh token: ' + token);
+    return token;
+}
 
 /**
      * Method that compares a plain text password with a hashed password

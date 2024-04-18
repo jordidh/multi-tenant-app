@@ -3,10 +3,10 @@ const router = express.Router();
 const logger = require('../api/logger');
 const warehouse = require('../api/warehouse');
 const tenantdb = require('../api/tenantdb');
-// const requestQuery = require('../api/requestQuery');
 
 router.delete(('/'), async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10);
+    const conn = await tenantdb.getPromisePool(id).getConnection();
     const sql = 'DELETE FROM register;';
     const sql1 = 'DELETE FROM STOCK;';
     await conn.execute(sql);
@@ -102,6 +102,13 @@ router.delete(('/'), async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: false
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 2
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with all locations found in data attribute
@@ -113,8 +120,8 @@ router.delete(('/'), async function (req, res, next) {
  */
 
 router.get('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
-
+    const id = parseInt(req.query.id, 10); // Obtener la ID del tenant propietario de la db
+    const conn = await tenantdb.getPromisePool(id).getConnection();
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
@@ -158,7 +165,9 @@ router.get('/location', async function (req, res, next) {
  */
 
 router.get('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    console.log(req.query);
+    const id = parseInt(req.query.id, 10); // Obtener la ID del tenant propietario de la db
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -200,7 +209,8 @@ router.get('/location/:id', async function (req, res, next) {
  */
 
 router.post('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -256,7 +266,8 @@ router.post('/location', async function (req, res, next) {
  */
 
 router.put('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -308,7 +319,8 @@ router.put('/location/:id', async function (req, res, next) {
  */
 
 router.delete('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -376,7 +388,9 @@ router.delete('/location/:id', async function (req, res, next) {
  */
 
 router.get('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    console.log(req.body);
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -422,7 +436,8 @@ router.get('/stock', async function (req, res, next) {
  */
 
 router.get('/stock/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -464,7 +479,10 @@ router.get('/stock/:id', async function (req, res, next) {
  */
 
 router.post('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    console.log(req.body);
+    console.log(req.query);
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -520,7 +538,8 @@ router.post('/stock', async function (req, res, next) {
  */
 
 router.put('/stock/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -569,7 +588,8 @@ router.put('/stock/:id', async function (req, res, next) {
  */
 
 router.delete('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -624,7 +644,8 @@ router.delete('/stock', async function (req, res, next) {
  */
 
 router.post('/stock/fusion', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -674,7 +695,8 @@ router.post('/stock/fusion', async function (req, res, next) {
  */
 
 router.post('/stock/divide', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -726,7 +748,8 @@ router.post('/stock/divide', async function (req, res, next) {
  */
 
 router.post('/stock/group', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -786,7 +809,8 @@ router.post('/stock/group', async function (req, res, next) {
  */
 
 router.post('/stock/ungroup', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -847,7 +871,8 @@ router.post('/stock/ungroup', async function (req, res, next) {
  */
 
 router.post('/stock/change-location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -896,7 +921,8 @@ router.post('/stock/change-location', async function (req, res, next) {
  */
 
 router.get('/stock/count-location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');

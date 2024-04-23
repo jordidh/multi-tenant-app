@@ -20,14 +20,12 @@ router.post('/login', async function (req, res, next) {
 
     const loginResult = await tenant.loginDb(req.body.username, req.body.password);
     if (loginResult.errors.length > 0) {
-        res.send('Error');
-        return;
+        res.render('login', { title: 'nu+warehouses', message: { type: 'error', text: `${loginResult.data}: ${loginResult.errors[0].message}` } });
     }
     const accessToken = loginResult.data.accessToken;
     const refreshToken = loginResult.data.refreshToken;
-    console.log(accessToken);
-    console.log(refreshToken);
-    res.send('Hola');
+    // const conn = loginResult.data.conn;
+    res.render('tenant', { title: 'nu+warehouses', accessToken, refreshToken });
 });
 
 router.get('/register', function (req, res, next) {

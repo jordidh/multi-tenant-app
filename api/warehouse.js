@@ -331,6 +331,10 @@ module.exports = {
      * In REPEATABLE READ the update statement locks the row that matches with the id.
     */
     divideStock: async function (conn, stock, newQuantity) {
+        if ((stock.quantity - newQuantity) < 0) {
+            const error = new Error('La quantitat de stock no pot ser negativa');
+            return new ApiResult(400, 'La quantitat de stock no pot ser negativa', 1, [error]);
+        }
         await conn.beginTransaction();
         try {
             await lockLocation(conn, stock.location_id);

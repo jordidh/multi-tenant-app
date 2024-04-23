@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
+    "start:dev": "nodemon ./bin/www",
     "test": "node ./node_modules/mocha/bin/mocha",
     "test-apis": "node ./node_modules/mocha/bin/mocha ./test/api/",
     "test-routes": "node ./bin/www & P1=$! && sleep 2 && node ./node_modules/mocha/bin/mocha ./test/routes/v1/ && kill $P1",
@@ -43,6 +44,7 @@
     "eslint-plugin-n": "^16.1.0",
     "eslint-plugin-promise": "^6.1.1",
     "mocha": "^10.2.0",
+    "nodemon": "^3.1.0",
     "pre-commit": "^1.2.2"
   }
 }

@@ -3,10 +3,10 @@ const router = express.Router();
 const logger = require('../api/logger');
 const warehouse = require('../api/warehouse');
 const tenantdb = require('../api/tenantdb');
-// const requestQuery = require('../api/requestQuery');
 
 router.delete(('/'), async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10);
+    const conn = await tenantdb.getPromisePool(id).getConnection();
     const sql = 'DELETE FROM register;';
     const sql1 = 'DELETE FROM STOCK;';
     await conn.execute(sql);
@@ -102,6 +102,13 @@ router.delete(('/'), async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: false
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with all locations found in data attribute
@@ -113,8 +120,8 @@ router.delete(('/'), async function (req, res, next) {
  */
 
 router.get('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
-
+    const id = parseInt(req.query.id, 10); // Obtener la ID del tenant propietario de la db
+    const conn = await tenantdb.getPromisePool(id).getConnection();
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
     logger.info(isolationLevel[0][0]['@@transaction_isolation']);
@@ -147,6 +154,13 @@ router.get('/location', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: true
+ *       - in: query
+ *         nom: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -158,7 +172,9 @@ router.get('/location', async function (req, res, next) {
  */
 
 router.get('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    console.log(req.query);
+    const id = parseInt(req.query.id, 10); // Obtener la ID del tenant propietario de la db
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -189,6 +205,14 @@ router.get('/location/:id', async function (req, res, next) {
  *         application/json:
  *           schema:
  *             $ref: '#/definitions/schemas/Location'
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       201:
  *         description: ApiResult object with created container in data attribute
@@ -200,7 +224,8 @@ router.get('/location/:id', async function (req, res, next) {
  */
 
 router.post('/location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -232,6 +257,13 @@ router.post('/location', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: true
+ *       - in: query
+ *         nom: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     requestBody:
  *       required: true
  *       content:
@@ -256,7 +288,8 @@ router.post('/location', async function (req, res, next) {
  */
 
 router.put('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -280,7 +313,7 @@ router.put('/location/:id', async function (req, res, next) {
  *     tags:
  *       - Location
  *     summary: delete location
- *     description: Deletes the stock with the id inserted.
+ *     description: Deletes the location with the id inserted. Must not be referenced in any stock.
  *     produces:
  *       - application/json
  *     parameters:
@@ -290,6 +323,13 @@ router.put('/location/:id', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: true
+ *       - in: query
+ *         nom: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: delete location
@@ -308,7 +348,8 @@ router.put('/location/:id', async function (req, res, next) {
  */
 
 router.delete('/location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -365,6 +406,13 @@ router.delete('/location/:id', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: false
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with all stocks found in data attribute
@@ -376,7 +424,8 @@ router.delete('/location/:id', async function (req, res, next) {
  */
 
 router.get('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -411,6 +460,13 @@ router.get('/stock', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: true
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -422,7 +478,8 @@ router.get('/stock', async function (req, res, next) {
  */
 
 router.get('/stock/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -453,6 +510,14 @@ router.get('/stock/:id', async function (req, res, next) {
  *         application/json:
  *           schema:
  *             $ref: '#/definitions/schemas/Stock'
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       201:
  *         description: ApiResult object with created container in data attribute
@@ -464,7 +529,10 @@ router.get('/stock/:id', async function (req, res, next) {
  */
 
 router.post('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    console.log(req.body);
+    console.log(req.query);
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -496,6 +564,13 @@ router.post('/stock', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: true
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID of the tenant owner of the warehouse db
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     requestBody:
  *       required: true
  *       content:
@@ -520,7 +595,8 @@ router.post('/stock', async function (req, res, next) {
  */
 
 router.put('/stock/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -543,17 +619,31 @@ router.put('/stock/:id', async function (req, res, next) {
  *   delete:
  *     tags:
  *       - Stock
- *     summary: delete location
- *     description: Deletes the stock with the id inserted.
+ *     summary: Eliminar stock
+ *     description: Elimina el stock con la ID proporcionada.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/definitions/schemas/Stock'
+ *             allOf:  # Utiliza allOf para combinar la referencia y añadir propiedades adicionales
+ *               - $ref: '#/definitions/schemas/Stock'  # Referencia al esquema de Stock
+ *               - type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 2
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
- *         description: delete stock
+ *         description: Stock eliminado exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -569,7 +659,9 @@ router.put('/stock/:id', async function (req, res, next) {
  */
 
 router.delete('/stock', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    console.log(req.body);
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -602,17 +694,25 @@ router.delete('/stock', async function (req, res, next) {
  *             type: array
  *           example:
  *             - id: 1
- *               quantity: 5
+ *               quantity: 55
  *               location_id: 1
  *               product_id: 1
  *               unit_id: 1
  *               version: 0
  *             - id: 3
- *               quantity: 15
+ *               quantity: 35
  *               location_id: 1
  *               product_id: 1
  *               unit_id: 1
  *               version: 0
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -624,7 +724,8 @@ router.delete('/stock', async function (req, res, next) {
  */
 
 router.post('/stock/fusion', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -657,12 +758,20 @@ router.post('/stock/fusion', async function (req, res, next) {
  *             type: array
  *           example:
  *             - id: 1
- *               quantity: 5
+ *               quantity: 55
  *               location_id: 1
  *               product_id: 1
  *               unit_id: 1
  *               version: 0
  *             - quantity: 20
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -674,7 +783,8 @@ router.post('/stock/fusion', async function (req, res, next) {
  */
 
 router.post('/stock/divide', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -708,13 +818,21 @@ router.post('/stock/divide', async function (req, res, next) {
  *             type: array
  *           example:
  *             - id: 1
- *               quantity: 5
+ *               quantity: 55
  *               location_id: 1
  *               product_id: 1
  *               unit_id: 1
  *               version: 0
  *             - id: 2
  *               base_unit: 10
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -726,7 +844,8 @@ router.post('/stock/divide', async function (req, res, next) {
  */
 
 router.post('/stock/group', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -775,6 +894,14 @@ router.post('/stock/group', async function (req, res, next) {
  *               version: 0
  *             - id: 1
  *               base_unit: 1
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -786,7 +913,8 @@ router.post('/stock/group', async function (req, res, next) {
  */
 
 router.post('/stock/ungroup', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -827,8 +955,8 @@ router.post('/stock/ungroup', async function (req, res, next) {
  *             type: array
  *           example:
  *             - id: 2
- *               quantity: 5
- *               location_id: 1
+ *               quantity: 17
+ *               location_id: 2
  *               product_id: 1
  *               unit_id: 2
  *               version: 0
@@ -836,6 +964,14 @@ router.post('/stock/ungroup', async function (req, res, next) {
  *               code: "LOC01"
  *               description: "Location 1"
  *               version: 0
+ *     parameters:
+ *       - in: query
+ *         name: id   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -847,7 +983,8 @@ router.post('/stock/ungroup', async function (req, res, next) {
  */
 
 router.post('/stock/change-location', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');
@@ -885,6 +1022,13 @@ router.post('/stock/change-location', async function (req, res, next) {
  *         schema:
  *           type: integer
  *         required: true
+ *       - in: query
+ *         name: id_tenant   # Nuevo parámetro de consulta para la ID
+ *         description: ID del propietario del almacén en la base de datos
+ *         example: 999
+ *         schema:
+ *           type: integer
+ *         required: true  # Indica si el parámetro es obligatorio
  *     responses:
  *       200:
  *         description: ApiResult object with created container in data attribute
@@ -896,7 +1040,8 @@ router.post('/stock/change-location', async function (req, res, next) {
  */
 
 router.get('/stock/count-location/:id', async function (req, res, next) {
-    const conn = await tenantdb.getPromisePool(999).getConnection();
+    const id = parseInt(req.query.id, 10); // Para seleccionar la base de datos correcta
+    const conn = await tenantdb.getPromisePool(id).getConnection();
 
     await conn.execute('set session transaction isolation level repeatable read');
     const isolationLevel = await conn.execute('SELECT @@transaction_isolation');

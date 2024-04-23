@@ -2,14 +2,12 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-// var logger = require('morgan');
 const morgan = require('morgan');
 const logger = require('./api/logger');
 const database = require('./api/database');
 const mysql = require('mysql2');
 const uniqid = require('uniqid');
 const tenantdb = require('./api/tenantdb');
-
 const apiDocsV1 = require('./routes/v1/api-docs');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -17,9 +15,6 @@ const warehouseRouter = require('./routes/warehouse');
 const cleanRouter = require('./routes/clean-db-test');
 
 const fs = require('fs');
-
-/* const nodemailer = require("nodemailer");
-var transporter=null; */
 
 // Load .env file to provess.env variables, if the file does not exist does nothing
 require('dotenv').config();
@@ -69,22 +64,22 @@ database.connect(db, function (err) {
 // Gets all databases from mysql and adds to the connectionMap with tenantdb.connectAll(dbs)
 async function getAllDatabase () {
     const conn = await database.getPromisePool().getConnection();
-    let db;
     const dbs = [];
     try {
-        let sql = 'SELECT * FROM tenants ';
+        const sql = 'SELECT * FROM tenants ';
         const totalTenants = await conn.execute(sql);
         if (totalTenants.length !== 2) {
             throw new Error('Select * FROM tenants was not successful');
         }
         for (let i = 0; i < totalTenants[0].length; i++) {
-            sql = 'SELECT db_name, db_username, db_password FROM tenants WHERE id = ?';
-            const resultQuery = await conn.execute(sql, [i + 1]);
+            const tenant = totalTenants[0][i];
+            const sql = 'SELECT db_name, db_username, db_password FROM tenants WHERE id = ?';
+            const resultQuery = await conn.execute(sql, [tenant.id]);
             if (resultQuery.length !== 2 || resultQuery[0].length === 0) {
                 throw new Error('Select db_name, db_username, db_password was not successful');
             }
-            db = {
-                id: (i + 1),
+            const db = {
+                id: tenant.id,
                 host: process.env.DB_HOST,
                 port: process.env.DB_PORT,
                 user: resultQuery[0][0].db_username,
@@ -94,6 +89,7 @@ async function getAllDatabase () {
             };
             dbs.push(db);
         }
+        console.log(dbs);
         tenantdb.connectAll(dbs);
     } catch (e) {
         console.log('Error with getAllDatabase() from app.js. ' + e);
@@ -116,7 +112,6 @@ async function createDBTest () {
     // Create the new DB
     const dbCreated = await conn.execute('CREATE DATABASE IF NOT EXISTS db_test;');
     if (dbCreated.length !== 2) throw new Error('Test database not created');
-
     conn = await tenantdb.getPromisePool(999).getConnection();
     const queries = DBTESTSCRIPT.split(';');
     const validQueries = queries.filter(query => query.trim() !== '');
@@ -173,11 +168,6 @@ getAllDatabase();
 setDbTestConnection();
 
 const app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
-
 // app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -187,11 +177,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 const morganFormat = process.env.NODE_ENV !== 'production' ? 'dev' : 'combined';
 app.use(
     morgan(morganFormat, {
-    // Function to determine if logging is skipped, defaults to false
-    // skip: function(req, res) {
-    //   // Skip logging when function has exit (returns status code < 400)
-    //   return res.statusCode < 400;
-    // },
+        // Function to determine if logging is skipped, defaults to false
+        // skip: function(req, res) {
+        //   // Skip logging when function has exit (returns status code < 400)
+        //   return res.statusCode < 400;
+        // },
         stream: {
             write: (message) => logger.http(message.trim())
         }

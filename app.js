@@ -8,15 +8,21 @@ const database = require('./api/database');
 const mysql = require('mysql2');
 const uniqid = require('uniqid');
 const tenantdb = require('./api/tenantdb');
-const apiDocsV1 = require('./routes/v1/api-docs');
+const orderRouter = require('./routes/order');
+const orderLineRouter = require('./routes/order_line');
+// const apiDocsV1 = require('./routes/v1/api-docs');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const warehouseRouter = require('./routes/warehouse');
 const cleanRouter = require('./routes/clean-db-test');
 
 const fs = require('fs');
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
-// Load .env file to provess.env variables, if the file does not exist does nothing
+const app = express();
+
+// Load .env file to process.env variables, if the file does not exist does nothing
 require('dotenv').config();
 
 // Check that the mandatory environment variables are set
@@ -42,7 +48,14 @@ const db = {
     database: process.env.DB_DATABASE || 'tenants_app',
     user: process.env.DB_USER || 'cbwms',
     password: process.env.DB_PASSWORD || '1qaz2wsx',
-    connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
+    connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
+    ssl: { rejectUnauthorized: true },
+    multipleStatements: true,
+    waitForConnections: true,
+    queueLimit: 0,
+    connectTimeout: 10000,
+    charset: 'utf8mb4_unicode_ci',
+    allowPublicKeyRetrieval: true
 };
 
 database.connect(db, function (err) {
@@ -60,6 +73,22 @@ database.connect(db, function (err) {
         });
     }
 });
+
+// Swagger setup
+const swaggerOptions = {
+    swaggerDefinition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API Documentation',
+            version: '1.0.0',
+            description: 'API documentation'
+        }
+    },
+    apis: ['./routes/*.js'] // Verifica que aquesta línia inclou el camí correcte
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Gets all databases from mysql and adds to the connectionMap with tenantdb.connectAll(dbs)
 async function getAllDatabase () {
@@ -116,7 +145,15 @@ async function createDBTest () {
     const queries = DBTESTSCRIPT.split(';');
     const validQueries = queries.filter(query => query.trim() !== '');
     for (const query of validQueries) {
-        await conn.execute(query);
+        try {
+            await conn.execute(query);
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                console.log(`Duplicate entry for key PRIMARY: ${query}`);
+            } else {
+                console.log(`Error executing query: ${query} - ${error.message}`);
+            }
+        }
     }
 }
 
@@ -167,8 +204,7 @@ async function setDbTestConnection () {
 getAllDatabase();
 setDbTestConnection();
 
-const app = express();
-// app.use(logger('dev'));
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -177,34 +213,32 @@ app.use(express.static(path.join(__dirname, 'public')));
 const morganFormat = process.env.NODE_ENV !== 'production' ? 'dev' : 'combined';
 app.use(
     morgan(morganFormat, {
-        // Function to determine if logging is skipped, defaults to false
-        // skip: function(req, res) {
-        //   // Skip logging when function has exit (returns status code < 400)
-        //   return res.statusCode < 400;
-        // },
         stream: {
             write: (message) => logger.http(message.trim())
         }
     })
 );
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/warehouse', warehouseRouter);
-app.use('/v1/api-docs', apiDocsV1);
-app.use('/clean-db-test', cleanRouter);
+// Set Pug as the view engine
+app.set('view engine', 'pug');
 
 /**
  * Generate one uniqueid everytime API is called, to trace the client call
  */
 app.use(async (req, res, next) => {
-    // Get the requestId if its provided in the heather
     const requestId = req.headers['x-request-id'];
-    // Save the requestId or create a new one if not exists
     req.requestId = requestId || uniqid();
-
     next();
 });
+
+// Routes
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/warehouse', warehouseRouter);
+app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/order', orderRouter);
+app.use('/order_line', orderLineRouter);
+app.use('/clean-db-test', cleanRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -214,12 +248,9 @@ app.use(function (req, res, next) {
 });
 
 // error handler
-app.use(function (err, req, res, next) {
-    // set locals, only providing error in development
+app.use((err, req, res, next) => {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
     const status = err.status || 500;
     logger.error(`ExpressJS: [${req.method}] ${req.originalUrl}: ${status}: ${err.message}`);
 
@@ -227,28 +258,5 @@ app.use(function (err, req, res, next) {
 });
 
 logger.info(`Node environment = ${(process.env.NODE_ENV ? process.env.NODE_ENV : 'development')}`);
-
-/* (async () => {
-    transporter = await nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            type: 'OAuth2',
-            user: process.env.MAIL_USERNAME,
-            pass: process.env.MAIL_PASSWORD,
-            clientId: process.env.OAUTH_CLIENTID,
-            clientSecret: process.env.OAUTH_CLIENT_SECRET,
-            refreshToken: process.env.OAUTH_REFRESH_TOKEN
-        }
-    });
-    const info = await transporter.sendMail({
-        from: 'arcedo.marc@gmail.com', // sender address
-        to: "jordi@codebiting.com", // list of receivers
-        subject: "Hello ✔", // Subject line
-        text: "Hello world?", // plain text body
-        html: "<b>Hello world?</b>", // html body
-    });
-})().catch(e => {
-    console.error(e.message);
-}); */
 
 module.exports = app;

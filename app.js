@@ -26,18 +26,8 @@ const app = express();
 require('dotenv').config();
 
 // Check that the mandatory environment variables are set
-if (!process.env.CRYPTO_KEY) {
-    logger.error('CRYPTO_KEY environment variable not set');
-    process.exit(1);
-}
-
-if (!process.env.CRYPTO_IV) {
-    logger.error('CRYPTO_IV environment variable not set');
-    process.exit(1);
-}
-
-if (!process.env.CRYPTO_ALG) {
-    logger.error('CRYPTO_ALG environment variable not set');
+if (!process.env.CRYPTO_KEY || !process.env.CRYPTO_IV || !process.env.CRYPTO_ALG) {
+    logger.error('Some mandatory environment variables are not set');
     process.exit(1);
 }
 
@@ -91,7 +81,7 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Gets all databases from mysql and adds to the connectionMap with tenantdb.connectAll(dbs)
-async function getAllDatabase () {
+async function getAllDatabase() {
     const conn = await database.getPromisePool().getConnection();
     const dbs = [];
     try {
@@ -125,9 +115,10 @@ async function getAllDatabase () {
     }
 }
 
-async function createDBTest () {
-    // 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
-    const DBTESTSCRIPT = fs.readFileSync('scripts/db/db_test.sql', 'utf8');
+async function createDBTest() {
+    const DBTENANTSCRIPT = fs.readFileSync('scripts/db/db_tenant.sql', 'utf8');
+    const DBTESTINSERTSCRIPT = fs.readFileSync('scripts/db/db_test_insert.sql', 'utf8');
+    
     // Connection to mysql db
     const connToMySql = await mysql.createPool({
         host: process.env.DB_HOST || 'localhost',
@@ -142,9 +133,22 @@ async function createDBTest () {
     const dbCreated = await conn.execute('CREATE DATABASE IF NOT EXISTS db_test;');
     if (dbCreated.length !== 2) throw new Error('Test database not created');
     conn = await tenantdb.getPromisePool(999).getConnection();
-    const queries = DBTESTSCRIPT.split(';');
-    const validQueries = queries.filter(query => query.trim() !== '');
-    for (const query of validQueries) {
+    
+    const tenantQueries = DBTENANTSCRIPT.split(';').filter(query => query.trim() !== '');
+    for (const query of tenantQueries) {
+        try {
+            await conn.execute(query);
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                console.log(`Duplicate entry for key PRIMARY: ${query}`);
+            } else {
+                console.log(`Error executing query: ${query} - ${error.message}`);
+            }
+        }
+    }
+
+    const testInsertQueries = DBTESTINSERTSCRIPT.split(';').filter(query => query.trim() !== '');
+    for (const query of testInsertQueries) {
         try {
             await conn.execute(query);
         } catch (error) {
@@ -160,7 +164,7 @@ async function createDBTest () {
 /**
  * Creates an user 'user_test' and a connection for the 'db_test' database.
  */
-async function setDbTestConnection () {
+async function setDbTestConnection() {
     const conn = await database.getPromisePool().getConnection();
     try {
         let sql = 'SELECT user FROM mysql.user WHERE user = ?';

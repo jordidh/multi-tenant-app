@@ -6,15 +6,17 @@ const morgan = require('morgan');
 const logger = require('./api/logger');
 const database = require('./api/database');
 const mysql = require('mysql2');
-const uniqid = require('uniqid');
+// const uniqid = require('uniqid');
 const tenantdb = require('./api/tenantdb');
-const orderRouter = require('./routes/order');
-const orderLineRouter = require('./routes/order_line');
-// const apiDocsV1 = require('./routes/v1/api-docs');
+const orderRouter = require('./routes/v1/order');
+const orderLineRouter = require('./routes/v1/order_line');
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-const warehouseRouter = require('./routes/warehouse');
-const cleanRouter = require('./routes/clean-db-test');
+const usersRouter = require('./routes/v1/users');
+const warehouseRouter = require('./routes/v1/warehouse');
+const cleanRouter = require('./routes/v1/clean-db-test');
+// const accountRouter = require('./routes/v1/customer');
+// const providerRouter = require('./routes/v1/provider');
+// const addressRouter = require('./routes/v1/address');
 
 const fs = require('fs');
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -26,8 +28,18 @@ const app = express();
 require('dotenv').config();
 
 // Check that the mandatory environment variables are set
-if (!process.env.CRYPTO_KEY || !process.env.CRYPTO_IV || !process.env.CRYPTO_ALG) {
-    logger.error('Some mandatory environment variables are not set');
+if (!process.env.CRYPTO_KEY) {
+    logger.error('CRYPTO_KEY environment variable not set');
+    process.exit(1);
+}
+
+if (!process.env.CRYPTO_IV) {
+    logger.error('CRYPTO_IV environment variable not set');
+    process.exit(1);
+}
+
+if (!process.env.CRYPTO_ALG) {
+    logger.error('CRYPTO_ALG environment variable not set');
     process.exit(1);
 }
 
@@ -74,14 +86,14 @@ const swaggerOptions = {
             description: 'API documentation'
         }
     },
-    apis: ['./routes/*.js'] // Verifica que aquesta línia inclou el camí correcte
+    apis: ['./routes/v1/*.js'] // Verifica que aquesta línia inclou el camí correcte
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Gets all databases from mysql and adds to the connectionMap with tenantdb.connectAll(dbs)
-async function getAllDatabase() {
+async function getAllDatabase () {
     const conn = await database.getPromisePool().getConnection();
     const dbs = [];
     try {
@@ -115,10 +127,9 @@ async function getAllDatabase() {
     }
 }
 
-async function createDBTest() {
+async function createDBTest () {
     const DBTENANTSCRIPT = fs.readFileSync('scripts/db/db_tenant.sql', 'utf8');
     const DBTESTINSERTSCRIPT = fs.readFileSync('scripts/db/db_test_insert.sql', 'utf8');
-    
     // Connection to mysql db
     const connToMySql = await mysql.createPool({
         host: process.env.DB_HOST || 'localhost',
@@ -133,7 +144,6 @@ async function createDBTest() {
     const dbCreated = await conn.execute('CREATE DATABASE IF NOT EXISTS db_test;');
     if (dbCreated.length !== 2) throw new Error('Test database not created');
     conn = await tenantdb.getPromisePool(999).getConnection();
-    
     const tenantQueries = DBTENANTSCRIPT.split(';').filter(query => query.trim() !== '');
     for (const query of tenantQueries) {
         try {
@@ -164,7 +174,7 @@ async function createDBTest() {
 /**
  * Creates an user 'user_test' and a connection for the 'db_test' database.
  */
-async function setDbTestConnection() {
+async function setDbTestConnection () {
     const conn = await database.getPromisePool().getConnection();
     try {
         let sql = 'SELECT user FROM mysql.user WHERE user = ?';
@@ -223,44 +233,31 @@ app.use(
     })
 );
 
-// Set Pug as the view engine
-app.set('view engine', 'pug');
-
-/**
- * Generate one uniqueid everytime API is called, to trace the client call
- */
-app.use(async (req, res, next) => {
-    const requestId = req.headers['x-request-id'];
-    req.requestId = requestId || uniqid();
-    next();
-});
-
 // Routes
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/warehouse', warehouseRouter);
-app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-app.use('/order', orderRouter);
-app.use('/order_line', orderLineRouter);
-app.use('/clean-db-test', cleanRouter);
+app.use('/v1/users', usersRouter);
+app.use('/v1/order', orderRouter);
+app.use('/v1/order_line', orderLineRouter);
+app.use('/v1/warehouse', warehouseRouter);
+app.use('/v1/clean-db-test', cleanRouter);
+// app.use('/v1/account', customerRouter);
+// app.use('/v1/provider', providerRouter);
+// app.use('/v1/address', addressRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    const NOT_FOUND = 404;
-    logger.error(`ExpressJS: [${req.method}] ${req.originalUrl}: ${NOT_FOUND}: Not found`);
-    next(createError(NOT_FOUND));
+    next(createError(404));
 });
 
 // error handler
-app.use((err, req, res, next) => {
+app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
-    const status = err.status || 500;
-    logger.error(`ExpressJS: [${req.method}] ${req.originalUrl}: ${status}: ${err.message}`);
 
-    res.status(status);
+    // render the error page
+    res.status(err.status || 500);
+    res.render('error');
 });
-
-logger.info(`Node environment = ${(process.env.NODE_ENV ? process.env.NODE_ENV : 'development')}`);
 
 module.exports = app;

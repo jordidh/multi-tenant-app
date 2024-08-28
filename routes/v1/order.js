@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../api/logger');
-const orders = require('../api/order');
-const tenantdb = require('../api/tenantdb');
+const logger = require('../../api/logger');
+const orders = require('../../api/order');
+const tenantdb = require('../../api/tenantdb');
 
 /**
  * @swagger

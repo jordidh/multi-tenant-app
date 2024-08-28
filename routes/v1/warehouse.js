@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../api/logger');
-const warehouse = require('../api/warehouse');
-const tenantdb = require('../api/tenantdb');
+const logger = require('../../api/logger');
+const warehouse = require('../../api/warehouse');
+const tenantdb = require('../../api/tenantdb');
 
 router.delete(('/'), async function (req, res, next) {
     const id = parseInt(req.query.id, 10);

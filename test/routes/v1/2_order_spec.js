@@ -7,7 +7,7 @@ const { after, describe, it } = require('mocha');
 chai.use(dirtyChai);
 chai.use(chaiHttp);
 
-const URL = 'http://localhost:3000/order';
+const URL = 'http://localhost:3000/v1/order';
 
 const ORDER_NEW = {
     orderType: 'Customer',

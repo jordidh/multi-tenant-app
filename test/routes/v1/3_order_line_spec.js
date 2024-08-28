@@ -7,7 +7,7 @@ const { after, describe, it, before } = require('mocha');
 chai.use(dirtyChai);
 chai.use(chaiHttp);
 
-const URL = 'http://localhost:3000/order_line';
+const URL = 'http://localhost:3000/v1/order_line';
 const idTenantProva = "?id=999";
 
 const ORDER_LINE_NEW = {

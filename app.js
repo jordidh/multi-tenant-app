@@ -8,13 +8,13 @@ const database = require('./api/database');
 const mysql = require('mysql2');
 const uniqid = require('uniqid');
 const tenantdb = require('./api/tenantdb');
-const orderRouter = require('./routes/order');
+const orderRouter = require('./routes/v1/order');
 const customerRouter = require('./routes/v1/customer');
-const orderLineRouter = require('./routes/order_line');
+const orderLineRouter = require('./routes/v1/order_line');
 // const apiDocsV1 = require('./routes/v1/api-docs');
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-const warehouseRouter = require('./routes/warehouse');
+const usersRouter = require('./routes/v1/users');
+const warehouseRouter = require('./routes/v1/warehouse');
 const cleanRouter = require('./routes/clean-db-test');
 
 const fs = require('fs');
@@ -234,11 +234,11 @@ app.use(async (req, res, next) => {
 
 // Routes
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/warehouse', warehouseRouter);
+app.use('/v1/users', usersRouter);
+app.use('/v1/warehouse', warehouseRouter);
 app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-app.use('/order', orderRouter);
-app.use('/order_line', orderLineRouter);
+app.use('/v1/order', orderRouter);
+app.use('/v1/order_line', orderLineRouter);
 app.use('/clean-db-test', cleanRouter);
 app.use('/v1/customer', customerRouter);
 

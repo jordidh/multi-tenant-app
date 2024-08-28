@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const database = require('../api/database');
+const database = require('../../api/database');
 
 const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;

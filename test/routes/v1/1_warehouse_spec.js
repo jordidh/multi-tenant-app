@@ -7,7 +7,7 @@ const { after, describe, it } = require('mocha');
 chai.use(dirtyChai);
 chai.use(chaiHttp);
 
-const URL = 'http://localhost:3000/warehouse';
+const URL = 'http://localhost:3000/v1/warehouse';
 
 const LOCATION_NEW = {
     code: 'LOC1',

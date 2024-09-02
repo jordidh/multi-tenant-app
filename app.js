@@ -128,7 +128,7 @@ async function getAllDatabase () {
 
 async function createDBTest () {
     // 'readFileSync' creates a string with the script of db_tenant.sql and stores it in TENANTSCRIPT
-    const DBTESTSCRIPT = fs.readFileSync('scripts/db/db_test.sql', 'utf8');
+    const DBTESTSCRIPT = fs.readFileSync('scripts/db/db_test_insert.sql', 'utf8');
     // Connection to mysql db
     const connToMySql = await mysql.createPool({
         host: process.env.DB_HOST || 'localhost',
@@ -140,7 +140,7 @@ async function createDBTest () {
     let conn = connToMySql.promise();
 
     // Create the new DB
-    const dbCreated = await conn.execute('CREATE DATABASE IF NOT EXISTS db_test;');
+    const dbCreated = await conn.execute('CREATE DATABASE IF NOT EXISTS db_test_insert;');
     if (dbCreated.length !== 2) throw new Error('Test database not created');
     conn = await tenantdb.getPromisePool(999).getConnection();
     const queries = DBTESTSCRIPT.split(';');
@@ -159,7 +159,7 @@ async function createDBTest () {
 }
 
 /**
- * Creates an user 'user_test' and a connection for the 'db_test' database.
+ * Creates an user 'user_test' and a connection for the 'db_test_insert' database.
  */
 async function setDbTestConnection () {
     const conn = await database.getPromisePool().getConnection();
@@ -173,7 +173,7 @@ async function setDbTestConnection () {
         sql = `CREATE USER ${process.env.DB_USER_TEST}@'${process.env.DB_HOST_TEST}' IDENTIFIED BY '${process.env.DB_PASSWORD_TEST}'`;
         resultQuery = await conn.execute(sql);
         if (resultQuery.length !== 2) throw new Error('User not created');
-        const userPrivilege = await conn.execute(`GRANT ALL PRIVILEGES ON \`db_test\`.* TO '${process.env.DB_USER_TEST}'@'${process.env.DB_HOST_TEST}';`);
+        const userPrivilege = await conn.execute(`GRANT ALL PRIVILEGES ON \`db_test_insert\`.* TO '${process.env.DB_USER_TEST}'@'${process.env.DB_HOST_TEST}';`);
         if (userPrivilege.length !== 2) throw new Error('User privileges not conceded');
         const flushPrivileges = await conn.execute('FLUSH PRIVILEGES');
         if (flushPrivileges.length !== 2) throw new Error('Flush privileges not executed');
@@ -183,22 +183,22 @@ async function setDbTestConnection () {
             db_port: 3306,
             db_username: process.env.DB_USER_TEST,
             db_password: process.env.DB_PASSWORD_TEST,
-            db_name: 'db_test',
+            db_name: 'db_test_insert',
             connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
         };
         await tenantdb.addConnection(dbTest);
 
-        sql = 'SHOW DATABASES LIKE "db_test"';
+        sql = 'SHOW DATABASES LIKE "db_test_insert"';
         resultQuery = await conn.execute(sql);
         if (resultQuery[0].length === 1) {
-            sql = 'DROP DATABASE db_test';
+            sql = 'DROP DATABASE db_test_insert';
             resultQuery = await conn.execute(sql);
             createDBTest();
         } else {
             createDBTest();
         }
     } catch (error) {
-        logger.error('Error creating database db_test conection:', error);
+        logger.error('Error creating database db_test_insert conection:', error);
     }
 }
 

@@ -9,15 +9,43 @@ const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 
+// Swagger dependencies
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+
 // Import routers
 const indexRouter = require('./routes/index');
 const dbTestSetupRouter = require('./routes/v1/db-test');  // For DB test setup
-const orderRouter = require('./routes/v1/order');               // Order route
-const orderLineRouter = require('./routes/v1/order_line');       // Order Line route
-const warehouseRouter = require('./routes/v1/warehouse');        // Warehouse route
-const customerRouter = require('./routes/v1/customer');          // Customer route
+const orderRouter = require('./routes/v1/order');          // Order route
+const orderLineRouter = require('./routes/v1/order_line'); // Order Line route
+const warehouseRouter = require('./routes/v1/warehouse');  // Warehouse route
+const customerRouter = require('./routes/v1/customer');    // Customer route
 
 const app = express();
+// Set up view engine as 'pug'
+app.set('views', path.join(__dirname, 'views'));  // Set the directory for views (templates)
+app.set('view engine', 'pug');       
+
+// Swagger configuration
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API Documentation',
+            version: '1.0.0',
+            description: 'Multi-tenant API documentation',
+        },
+        servers: [
+            {
+                url: `http://localhost:${process.env.PORT || 3000}/v1`,
+            },
+        ],
+    },
+    apis: ['./routes/v1/*.js'], // Path to the API docs in the routes
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Configure Passport to use JWT strategy
 const opts = {
@@ -47,10 +75,10 @@ app.use(passport.initialize());
 // Define routes
 app.use('/', indexRouter);
 app.use('/v1/db-test', dbTestSetupRouter);  // DB test setup
-app.use('/v1/order', orderRouter);                // Order route
-app.use('/v1/order_line', orderLineRouter);       // Order Line route
-app.use('/v1/warehouse', warehouseRouter);        // Warehouse route
-app.use('/v1/customer', customerRouter);          // Customer route
+app.use('/v1/order', orderRouter);          // Order route
+app.use('/v1/order_line', orderLineRouter); // Order Line route
+app.use('/v1/warehouse', warehouseRouter);  // Warehouse route
+app.use('/v1/customer', customerRouter);    // Customer route
 
 // Handle 404 errors
 app.use((req, res, next) => {

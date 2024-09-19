@@ -1,7 +1,0 @@
-Unknown command: "starttree"
-
-Did you mean this?
-    npm run start:dev # run the "start:dev" package script
-
-To see a list of supported npm commands, run:
-  npm help

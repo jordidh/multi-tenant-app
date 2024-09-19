@@ -68,9 +68,9 @@ describe('API Warehouse', function () {
         expect(locations.statusCode).to.equal(200);
         expect(locations.body.data).to.be.an('array');
         
-        if (locations.body.requestId) {
+        
             expect(locations.body.requestId).to.be.a('number');
-        }
+        
         
         expect(locations.body.errors).to.be.an('array').that.eql([]);
     });
@@ -81,9 +81,9 @@ describe('API Warehouse', function () {
         expect(locations.statusCode).to.equal(200);
         expect(locations.body.data).to.be.an('object');
         
-        if (locations.body.requestId) {
+       
             expect(locations.body.requestId).to.be.a('number');
-        }
+        
         
         expect(locations.body.errors).to.be.an('array').that.eql([]);
     });
@@ -96,9 +96,9 @@ describe('API Warehouse', function () {
         expect(stockCreationResponse.body.data).to.be.an('object');
         
         // Si existe un requestId, asegúrate de que sea del tipo correcto
-        if (stockCreationResponse.body.requestId) {
+       
             expect(stockCreationResponse.body.requestId).to.be.a('number'); // Cambiado a número en lugar de string
-        }
+        
         
         expect(stockCreationResponse.body.errors).to.be.an('array').that.eql([]);
         
@@ -121,10 +121,10 @@ describe('API Warehouse', function () {
         expect(deleteStockResponse.statusCode).to.equal(200);
         expect(deleteStockResponse.body.data).to.be.an('object');
         
-        // Valida que el requestId sea numérico
-        if (deleteStockResponse.body.requestId) {
+        
+        
             expect(deleteStockResponse.body.requestId).to.be.a('number'); // Cambiado a número
-        }
+        
         
         expect(deleteStockResponse.body.errors).to.be.an('array').that.eql([]);
     });
@@ -135,10 +135,9 @@ describe('API Warehouse', function () {
         expect(createStock.statusCode).to.equal(201);
         expect(createStock.body.data).to.be.an('object');
         
-        // Ajustar según el tipo de requestId, aquí debería ser 'number'
-        if (createStock.body.requestId) {
+       
             expect(createStock.body.requestId).to.be.a('number'); // Cambiado de 'string' a 'number'
-        }
+        
         
         expect(createStock.body.errors).to.be.an('array').that.eql([]);
     
@@ -147,10 +146,10 @@ describe('API Warehouse', function () {
         expect(stock.statusCode).to.equal(200);
         expect(stock.body.data).to.be.an('array');
         
-        // Ajustar tipo para requestId si es necesario
-        if (stock.body.requestId) {
+    
+       
             expect(stock.body.requestId).to.be.a('number'); 
-        }
+        
         
         expect(stock.body.errors).to.be.an('array').that.eql([]);
     
@@ -159,10 +158,9 @@ describe('API Warehouse', function () {
         expect(stockLimits.statusCode).to.equal(200);
         expect(stockLimits.body.data).to.be.an('array');
         
-        // Ajuste según tipo de requestId
-        if (stockLimits.body.requestId) {
+        
             expect(stockLimits.body.requestId).to.be.a('number'); 
-        }
+        
         
         expect(stockLimits.body.errors).to.be.an('array').that.eql([]);
     
@@ -178,10 +176,10 @@ describe('API Warehouse', function () {
         expect(deleteStock.statusCode).to.equal(200);
         expect(deleteStock.body.data).to.be.an('object');
         
-        // Ajustar tipo de requestId
-        if (deleteStock.body.requestId) {
+        
+     
             expect(deleteStock.body.requestId).to.be.a('number'); 
-        }
+        
         
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
@@ -191,9 +189,9 @@ describe('API Warehouse', function () {
         const location = await chai.request(URL).get(`/location/9999?id=${TENANT_ID_TEST}`);
         expect(location.statusCode).to.equal(500);
         
-        if (location.body.requestId) {
+       
             expect(location.body.requestId).to.be.a('number');
-        }
+        
         
         expect(location.body.errors).to.be.an('array');
         expect(location.body.errors).to.deep.equal([{
@@ -208,9 +206,9 @@ describe('API Warehouse', function () {
         const stock = await chai.request(URL).get(`/stock/9999?id=${TENANT_ID_TEST}`);
         expect(stock.statusCode).to.equal(500);
         
-        if (stock.body.requestId) {
+        
             expect(stock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock.body.errors).to.be.an('array');
         expect(stock.body.errors).to.deep.equal([{
@@ -227,9 +225,9 @@ describe('API Warehouse', function () {
         expect(location.statusCode).to.equal(201);
         expect(location.body.data).to.be.an('object');
         
-        if (location.body.requestId) {
+        
             expect(location.body.requestId).to.be.a('number');
-        }
+        
         
         expect(location.body.errors).to.be.an('array').that.eql([]);
     
@@ -237,9 +235,9 @@ describe('API Warehouse', function () {
         expect(deleteLocation.statusCode).to.equal(200);
         expect(deleteLocation.body.data).to.be.an('object');
         
-        if (deleteLocation.body.requestId) {
+        
             expect(deleteLocation.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteLocation.body.errors).to.be.an('array').that.eql([]);
     });
@@ -249,9 +247,9 @@ describe('API Warehouse', function () {
         expect(stock.statusCode).to.equal(201);
         expect(stock.body.data).to.be.an('object');
         
-        if (stock.body.requestId) {
+        
             expect(stock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock.body.errors).to.be.an('array').that.eql([]);
     
@@ -266,9 +264,9 @@ describe('API Warehouse', function () {
         expect(deleteStock.statusCode).to.equal(200);
         expect(deleteStock.body.data).to.be.an('object');
         
-        if (deleteStock.body.requestId) {
+        
             expect(deleteStock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
@@ -280,10 +278,10 @@ describe('API Warehouse', function () {
         expect(location.statusCode).to.equal(201);
         expect(location.body.data).to.be.an('object');
         
-        // Verificar que requestId es un número en la respuesta de creación de la ubicación
-        if (location.body.requestId) {
+        
+        
             expect(location.body.requestId).to.be.a('number');
-        }
+        
         
         expect(location.body.errors).to.be.an('array').that.eql([]);
         
@@ -295,10 +293,9 @@ describe('API Warehouse', function () {
         expect(updateLocation.statusCode).to.equal(200);
         expect(updateLocation.body.data).to.be.an('object');
         
-        // Verificar que requestId es un string en la respuesta de actualización de la ubicación
-        if (updateLocation.body.requestId) {
+        
             expect(updateLocation.body.requestId).to.be.a('number');
-        }
+        
         
         expect(updateLocation.body.errors).to.be.an('array').that.eql([]);
         
@@ -315,10 +312,9 @@ describe('API Warehouse', function () {
         expect(deleteLocation.statusCode).to.equal(200);
         expect(deleteLocation.body.data).to.be.an('object');
         
-        // Verificar que requestId es un string en la respuesta de eliminación de la ubicación
-        if (deleteLocation.body.requestId) {
+       
             expect(deleteLocation.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteLocation.body.errors).to.be.an('array').that.eql([]);
     });
@@ -328,10 +324,10 @@ describe('API Warehouse', function () {
         expect(stock.statusCode).to.equal(201);
         expect(stock.body.data).to.be.an('object');
     
-        // Verificar que requestId es un número en la respuesta de creación del stock
-        if (stock.body.requestId) {
+       
+        
             expect(stock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock.body.errors).to.be.an('array').that.eql([]);
     
@@ -346,9 +342,9 @@ describe('API Warehouse', function () {
         expect(updateStock.body.data).to.be.an('object');
     
         // Verificar que requestId es un número en la respuesta de actualización del stock
-        if (updateStock.body.requestId) {
+        
             expect(updateStock.body.requestId).to.be.a('number');  
-        }
+        
         
         expect(updateStock.body.errors).to.be.an('array').that.eql([]);
         
@@ -374,10 +370,10 @@ describe('API Warehouse', function () {
         expect(deleteStock.statusCode).to.equal(200);
         expect(deleteStock.body.data).to.be.an('object');
     
-        // Verificar que requestId es un número en la respuesta de eliminación del stock
-        if (deleteStock.body.requestId) {
+    
+       
             expect(deleteStock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
@@ -390,9 +386,9 @@ describe('API Warehouse', function () {
         });
         expect(updateLocation.statusCode).to.equal(500);
     
-        if (updateLocation.body.requestId) {
+        
             expect(updateLocation.body.requestId).to.be.a('number');
-        }
+        
     
         expect(updateLocation.body.errors).to.be.an('array').that.eql([{
             code: 'REG01',
@@ -411,9 +407,9 @@ describe('API Warehouse', function () {
         });
         expect(updateStock.statusCode).to.equal(500);
     
-        if (updateStock.body.requestId) {
+       
             expect(updateStock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(updateStock.body.errors).to.be.an('array').that.eql([{
             code: 'REG01',
@@ -432,9 +428,9 @@ describe('API Warehouse', function () {
         expect(location.body.data).to.be.an('object');
     
         // Verificar si el requestId está en la respuesta de la creación
-        if (location.body.requestId) {
+        
             expect(location.body.requestId).to.be.a('number');
-        }
+        
         
         expect(location.body.errors).to.be.an('array').that.eql([]);
     
@@ -444,9 +440,9 @@ describe('API Warehouse', function () {
         expect(deleteLocation.body.data).to.be.an('object');
     
         // Verificar si el requestId está en la respuesta de la eliminación
-        if (deleteLocation.body.requestId) {
+        
             expect(deleteLocation.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteLocation.body.errors).to.be.an('array').that.eql([]);
     });
@@ -457,10 +453,9 @@ describe('API Warehouse', function () {
         expect(stock.statusCode).to.equal(201);
         expect(stock.body.data).to.be.an('object');
     
-        // Verificar si el requestId está en la respuesta de la creación
-        if (stock.body.requestId) {
+       
             expect(stock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(stock.body.errors).to.be.an('array').that.eql([]);
     
@@ -477,10 +472,9 @@ describe('API Warehouse', function () {
         expect(deleteStock.statusCode).to.equal(200);
         expect(deleteStock.body.data).to.be.an('object');
     
-        // Verificar si el requestId está en la respuesta de la eliminación
-        if (deleteStock.body.requestId) {
+       
             expect(deleteStock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });
@@ -489,9 +483,9 @@ describe('API Warehouse', function () {
         const deleteLocation = await chai.request(URL).delete(`/location/9999?id=${TENANT_ID_TEST}`);
         expect(deleteLocation.statusCode).to.equal(500);
     
-        if (deleteLocation.body.requestId) {
+        
             expect(deleteLocation.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteLocation.body.errors).to.be.an('array').that.eql([{
             code: 'REG01',
@@ -513,9 +507,9 @@ describe('API Warehouse', function () {
     });
     expect(deleteStock.statusCode).to.equal(500);
     
-    if (deleteStock.body.requestId) {
+    
         expect(deleteStock.body.requestId).to.be.a('number');
-    }
+    
 
     expect(deleteStock.body.errors).to.be.an('array').that.eql([{
         code: 'REG01',
@@ -531,9 +525,9 @@ describe('API Warehouse', function () {
         expect(stock1.statusCode).to.equal(201);
         expect(stock1.body.data).to.be.an('object');
         
-        if (stock1.body.requestId) {
+        
             expect(stock1.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock1.body.errors).to.be.an('array').that.eql([]);
     
@@ -541,9 +535,9 @@ describe('API Warehouse', function () {
         expect(stock2.statusCode).to.equal(201);
         expect(stock2.body.data).to.be.an('object');
         
-        if (stock2.body.requestId) {
+       
             expect(stock2.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock2.body.errors).to.be.an('array').that.eql([]);
     
@@ -568,9 +562,9 @@ describe('API Warehouse', function () {
         expect(fusionStock.statusCode).to.equal(200);
         expect(fusionStock.body.data).to.be.an('object');
         
-        if (fusionStock.body.requestId) {
+        
             expect(fusionStock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(fusionStock.body.errors).to.be.an('array').that.eql([]);
     
@@ -585,9 +579,9 @@ describe('API Warehouse', function () {
         expect(deleteFusion.statusCode).to.equal(200);
         expect(deleteFusion.body.data).to.be.an('object');
         
-        if (deleteFusion.body.requestId) {
+        
             expect(deleteFusion.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteFusion.body.errors).to.be.an('array').that.eql([]);
     });
@@ -597,9 +591,9 @@ describe('API Warehouse', function () {
         expect(stock1.statusCode).to.equal(201);
         expect(stock1.body.data).to.be.an('object');
         
-        if (stock1.body.requestId) {
+       
             expect(stock1.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock1.body.errors).to.be.an('array').that.eql([]);
     
@@ -612,9 +606,9 @@ describe('API Warehouse', function () {
         expect(stock2.statusCode).to.equal(201);
         expect(stock2.body.data).to.be.an('object');
         
-        if (stock2.body.requestId) {
+        
             expect(stock2.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock2.body.errors).to.be.an('array').that.eql([]);
     
@@ -638,9 +632,9 @@ describe('API Warehouse', function () {
         ]);
         expect(fusionStock.statusCode).to.equal(500);
         
-        if (fusionStock.body.requestId) {
+        
             expect(fusionStock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(fusionStock.body.errors).to.be.an('array').that.eql([{
             code: 'REG01',
@@ -660,9 +654,9 @@ describe('API Warehouse', function () {
         expect(deleteStock1.statusCode).to.equal(200);
         expect(deleteStock1.body.data).to.be.an('object');
         
-        if (deleteStock1.body.requestId) {
+       
             expect(deleteStock1.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteStock1.body.errors).to.be.an('array').that.eql([]);
     
@@ -677,9 +671,9 @@ describe('API Warehouse', function () {
         expect(deleteStock2.statusCode).to.equal(200);
         expect(deleteStock2.body.data).to.be.an('object');
         
-        if (deleteStock2.body.requestId) {
+        
             expect(deleteStock2.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteStock2.body.errors).to.be.an('array').that.eql([]);
     });
@@ -690,9 +684,9 @@ it('should divide one stock', async () => {
     expect(stock.statusCode).to.equal(201);
     expect(stock.body.data).to.be.an('object');
     
-    if (stock.body.requestId) {
+    
         expect(stock.body.requestId).to.be.a('number');
-    }
+    
     
     expect(stock.body.errors).to.be.an('array').that.eql([]);
 
@@ -712,9 +706,9 @@ it('should divide one stock', async () => {
     expect(divideStock.statusCode).to.equal(200);
     expect(divideStock.body.data).to.be.an('array');
     
-    if (divideStock.body.requestId) {
+    
         expect(divideStock.body.requestId).to.be.a('number');
-    }
+    
     
     expect(divideStock.body.errors).to.be.an('array').that.eql([]);
 
@@ -729,9 +723,9 @@ it('should divide one stock', async () => {
     expect(deleteStock1.statusCode).to.equal(200);
     expect(deleteStock1.body.data).to.be.an('object');
     
-    if (deleteStock1.body.requestId) {
+   
         expect(deleteStock1.body.requestId).to.be.a('number');
-    }
+    
     
     expect(deleteStock1.body.errors).to.be.an('array').that.eql([]);
 
@@ -746,9 +740,9 @@ it('should divide one stock', async () => {
     expect(deleteStock2.statusCode).to.equal(200);
     expect(deleteStock2.body.data).to.be.an('object');
     
-    if (deleteStock2.body.requestId) {
+    
         expect(deleteStock2.body.requestId).to.be.a('number');
-    }
+    
     
     expect(deleteStock2.body.errors).to.be.an('array').that.eql([]);
 });
@@ -770,9 +764,9 @@ it('should divide one stock', async () => {
         ]);
         expect(divideStock.statusCode).to.equal(500);
         
-        if (divideStock.body.requestId) {
+        
             expect(divideStock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(divideStock.body.errors).to.be.an('array').that.eql([{
             code: 'REG01',
@@ -788,9 +782,9 @@ it('should divide one stock', async () => {
         expect(stock1.statusCode).to.equal(201);
         expect(stock1.body.data).to.be.an('object');
         
-        if (stock1.body.requestId) {
+        
             expect(stock1.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock1.body.errors).to.be.an('array').that.eql([]);
     
@@ -798,9 +792,9 @@ it('should divide one stock', async () => {
         expect(stock2.statusCode).to.equal(201);
         expect(stock2.body.data).to.be.an('object');
         
-        if (stock2.body.requestId) {
+        
             expect(stock2.body.requestId).to.be.a('number');
-        }
+        
         
         expect(stock2.body.errors).to.be.an('array').that.eql([]);
     
@@ -818,9 +812,9 @@ it('should divide one stock', async () => {
         expect(groupStock.statusCode).to.equal(200);
         expect(groupStock.body.data).to.be.an('array');
         
-        if (groupStock.body.requestId) {
+        
             expect(groupStock.body.requestId).to.be.a('number');
-        }
+        
         
         expect(groupStock.body.errors).to.be.an('array').that.eql([]);
     
@@ -835,9 +829,9 @@ it('should divide one stock', async () => {
         expect(deleteStock1.statusCode).to.equal(200);
         expect(deleteStock1.body.data).to.be.an('object');
         
-        if (deleteStock1.body.requestId) {
+        
             expect(deleteStock1.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteStock1.body.errors).to.be.an('array').that.eql([]);
     
@@ -852,9 +846,9 @@ it('should divide one stock', async () => {
         expect(deleteStock2.statusCode).to.equal(200);
         expect(deleteStock2.body.data).to.be.an('object');
         
-        if (deleteStock2.body.requestId) {
+        
             expect(deleteStock2.body.requestId).to.be.a('number');
-        }
+        
         
         expect(deleteStock2.body.errors).to.be.an('array').that.eql([]);
     });
@@ -866,9 +860,9 @@ it('should divide one stock', async () => {
     expect(stock1.statusCode).to.equal(201);
     expect(stock1.body.data).to.be.an('object');
     
-    if (stock1.body.requestId) {
+    
         expect(stock1.body.requestId).to.be.a('number');
-    }
+    
     
     expect(stock1.body.errors).to.be.an('array').that.eql([]);
 
@@ -896,9 +890,9 @@ it('should divide one stock', async () => {
     expect(ungroupStock.statusCode).to.equal(200);
     expect(ungroupStock.body.data).to.be.an('array');
     
-    if (ungroupStock.body.requestId) {
+    
         expect(ungroupStock.body.requestId).to.be.a('number');
-    }
+    
     
     expect(ungroupStock.body.errors).to.be.an('array').that.eql([]);
 
@@ -913,9 +907,9 @@ it('should divide one stock', async () => {
     expect(deleteStock1.statusCode).to.equal(200);
     expect(deleteStock1.body.data).to.be.an('object');
     
-    if (deleteStock1.body.requestId) {
+   
         expect(deleteStock1.body.requestId).to.be.a('number');
-    }
+    
     
     expect(deleteStock1.body.errors).to.be.an('array').that.eql([]);
 
@@ -930,9 +924,9 @@ it('should divide one stock', async () => {
     expect(deleteStock2.statusCode).to.equal(200);
     expect(deleteStock2.body.data).to.be.an('object');
     
-    if (deleteStock2.body.requestId) {
+    
         expect(deleteStock2.body.requestId).to.be.a('number');
-    }
+    
     
     expect(deleteStock2.body.errors).to.be.an('array').that.eql([]);
 });
@@ -949,9 +943,9 @@ it('should divide one stock', async () => {
         expect(location.statusCode).to.equal(201);
         expect(location.body.data).to.be.an('object');
     
-        if (location.body.requestId) {
+        
             expect(location.body.requestId).to.be.a('number');
-        }
+        
     
         expect(location.body.errors).to.be.an('array').that.eql([]);
     
@@ -959,9 +953,9 @@ it('should divide one stock', async () => {
         expect(stock.statusCode).to.equal(201);
         expect(stock.body.data).to.be.an('object');
     
-        if (stock.body.requestId) {
+        
             expect(stock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(stock.body.errors).to.be.an('array').that.eql([]);
     
@@ -984,9 +978,9 @@ it('should divide one stock', async () => {
         expect(changeLocation.statusCode).to.equal(200);
         expect(changeLocation.body.data).to.be.an('object');
     
-        if (changeLocation.body.requestId) {
+        
             expect(changeLocation.body.requestId).to.be.a('number');
-        }
+        
     
         expect(changeLocation.body.errors).to.be.an('array').that.eql([]);
     
@@ -1000,9 +994,9 @@ it('should divide one stock', async () => {
         });
         expect(deleteStock.statusCode).to.equal(200);
     
-        if (deleteStock.body.requestId) {
+        
             expect(deleteStock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     
@@ -1010,9 +1004,9 @@ it('should divide one stock', async () => {
         expect(deleteLocation.statusCode).to.equal(200);
         expect(deleteLocation.body.data).to.be.an('object');
     
-        if (deleteLocation.body.requestId) {
+        
             expect(deleteLocation.body.requestId).to.be.a('number');
-        }
+        
     
         expect(deleteLocation.body.errors).to.be.an('array').that.eql([]);
     });
@@ -1023,9 +1017,9 @@ it('should divide one stock', async () => {
         expect(createStock.statusCode).to.equal(201);
         expect(createStock.body.data).to.be.an('object');
     
-        if (createStock.body.requestId) {
+        
             expect(createStock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(createStock.body.errors).to.be.an('array').that.eql([]);
     
@@ -1033,9 +1027,9 @@ it('should divide one stock', async () => {
         expect(locationStock.statusCode).to.equal(200);
         expect(locationStock.body.data).to.be.an('object');
     
-        if (locationStock.body.requestId) {
+        
             expect(locationStock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(locationStock.body.errors).to.be.an('array').that.eql([]);
     
@@ -1050,9 +1044,9 @@ it('should divide one stock', async () => {
         expect(deleteStock.statusCode).to.equal(200);
         expect(deleteStock.body.data).to.be.an('object');
     
-        if (deleteStock.body.requestId) {
+       
             expect(deleteStock.body.requestId).to.be.a('number');
-        }
+        
     
         expect(deleteStock.body.errors).to.be.an('array').that.eql([]);
     });

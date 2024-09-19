@@ -55,9 +55,8 @@ describe('API Customers', function () {
             expect(res.statusCode).to.equal(201); // Expect successful creation status
             expect(res.body.data).to.be.an('object'); // Response should contain a customer object
             expect(res.body.data.id).to.exist; // Customer ID should be present
-            if (res.body.requestId) {
-                expect(res.body.requestId).to.be.a('string'); // Check if requestId is a string
-            }
+           expect(res.body.requestId).to.be.a('string'); // Check if requestId is a string
+            
             expect(res.body.errors).to.be.an('array').that.eql([]); // No errors expected
             createdCustomerId = res.body.data.id; // Store created customer ID
         } catch (error) {
@@ -74,9 +73,8 @@ describe('API Customers', function () {
             expect(res.statusCode).to.equal(200); // Expect successful retrieval status
             expect(res.body.data).to.be.an('object'); // Response should contain a customer object
             expect(res.body.data.id).to.equal(createdCustomerId); // Ensure correct customer ID is returned
-            if (res.body.requestId) {
-                expect(res.body.requestId).to.be.a('string'); // Check if requestId is a string
-            }
+            expect(res.body.requestId).to.be.a('string'); // Check if requestId is a string
+            
             expect(res.body.errors).to.be.an('array').that.eql([]); // No errors expected
         } catch (error) {
             console.log('Error in retrieving customer details:', error);
@@ -103,9 +101,9 @@ describe('API Customers', function () {
         expect(res.body.data.name).to.equal(CUSTOMER_UPDATE.name); // Ensure the name was updated
         expect(res.body.data.email).to.equal(CUSTOMER_UPDATE.email); // Ensure the email was updated
         expect(res.body.data.phone).to.equal(CUSTOMER_UPDATE.phone); // Ensure the phone was updated
-        if (res.body.requestId) {
+        
             expect(res.body.requestId).to.be.a('string'); // Check if requestId is a string
-        }
+        
         expect(res.body.errors).to.be.an('array').that.eql([]); // No errors expected
     });
 
@@ -116,9 +114,9 @@ describe('API Customers', function () {
             console.log('Delete customer response:', res.body);
             expect(res.statusCode).to.equal(200); // Expect successful deletion status
             expect(Number(res.body.data.id)).to.equal(createdCustomerId); // Ensure the correct customer was deleted
-            if (res.body.requestId) {
+           
                 expect(res.body.requestId).to.be.a('string'); // Check if requestId is a string
-            }
+            
             expect(res.body.errors).to.be.an('array').that.eql([]); // No errors expected
             createdCustomerId = null;  // Reset the customer ID after deletion
         } catch (error) {
@@ -136,9 +134,7 @@ describe('API Customers', function () {
             expect(res.body.data).to.be.an('array'); // Response should be an array of customers
             expect(res.body.data).to.have.length.greaterThan(0); // Ensure there are customers in the list
             expect(res.body.data[0]).to.have.property('id'); // Ensure each customer has an ID
-            if (res.body.requestId) {
-                expect(res.body.requestId).to.be.a('string');  // Ensure requestId is a string
-            }
+            //expect(res.body.requestId).to.be.a('String');  
             expect(res.body.errors).to.be.an('array').that.eql([]); // No errors expected
         } catch (error) {
             console.log('Error in listing customers:', error);

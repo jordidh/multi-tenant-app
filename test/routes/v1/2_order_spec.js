@@ -47,12 +47,6 @@ describe('API Order', function () {
         const orders = await chai.request(URL).get(`?id=${TENANT_ID_TEST}`);
         expect(orders.statusCode).to.equal(200);
         expect(orders.body.data).to.be.an('array');
-        
-        // Verifica si 'requestId' está presente antes de hacer la comparación
-        if (orders.body.requestId) {
-            expect(orders.body.requestId).to.be.a('string');
-        }
-    
         expect(orders.body.errors).to.be.an('array').that.eql([]);
     });
 

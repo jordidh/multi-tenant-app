@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../api/logger');
-const orders = require('../api/order');
-const tenantdb = require('../api/tenantdb');
+const logger = require('../../api/logger');
+const customers = require('../../api/customer');
+const tenantdb = require('../../api/tenantdb');
 
 /**
  * @swagger
  * tags:
- *   name: Orders
- *   description: API for managing orders
+ *   name: Customers
+ *   description: API for managing customers
  */
 
 /**
  * @swagger
- * /order:
+ * /customer:
  *   post:
- *     summary: Create a new order
- *     tags: [Orders]
+ *     summary: Create a new customer
+ *     tags: [Customers]
  *     parameters:
  *       - in: query
  *         name: id
@@ -30,50 +30,47 @@ const tenantdb = require('../api/tenantdb');
  *         application/json:
  *           schema:
  *             type: object
- *             example: { "orderId": "12345", "product": "Example Product", "quantity": 1 }
+ *             example: { "name": "John Doe", "email": "john@example.com", "phone": "123456789", "address_id": 1 }
  *     responses:
  *       201:
- *         description: Order created successfully
+ *         description: Customer created successfully
  *       500:
  *         description: Internal server error
  */
 router.post('/', async function (req, res, next) {
     try {
-        console.log(req.query);
-        console.log(req.params);
         const id = parseInt(req.query.id, 10);
-        console.log('Tenant ID:', id);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orders.createOrder(conn, req.body);
+        const ApiResult = await customers.createCustomer(conn, req.body);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order created successfully');
+            logger.info('Customer created successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error creating order', ApiResult.errors);
+            logger.error('Error creating customer', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in POST /order', error);
+        logger.error('Error in POST /customer', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order/{orderId}:
+ * /customer/{customerId}:
  *   put:
- *     summary: Update an existing order
- *     tags: [Orders]
+ *     summary: Update an existing customer
+ *     tags: [Customers]
  *     parameters:
  *       - in: path
- *         name: orderId
+ *         name: customerId
  *         schema:
  *           type: string
  *         required: true
- *         description: Order ID
+ *         description: Customer ID
  *       - in: query
  *         name: id
  *         schema:
@@ -86,47 +83,47 @@ router.post('/', async function (req, res, next) {
  *         application/json:
  *           schema:
  *             type: object
- *             example: { "product": "Updated Product", "quantity": 2 }
+ *             example: { "name": "John Doe", "email": "john@example.com", "phone": "123456789", "address_id": 1 }
  *     responses:
  *       200:
- *         description: Order updated successfully
+ *         description: Customer updated successfully
  *       500:
  *         description: Internal server error
  */
-router.put('/:orderId', async function (req, res, next) {
+router.put('/:customerId', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orders.updateOrder(conn, req.params.orderId, req.body);
+        const ApiResult = await customers.updateCustomer(conn, req.params.customerId, req.body);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order updated successfully');
+            logger.info('Customer updated successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error updating order', ApiResult.errors);
+            logger.error('Error updating customer', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in PUT /order/:orderId', error);
+        logger.error('Error in PUT /customer/:customerId', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order/{orderId}:
+ * /customer/{customerId}:
  *   get:
- *     summary: Get order details
- *     tags: [Orders]
+ *     summary: Get customer details
+ *     tags: [Customers]
  *     parameters:
  *       - in: path
- *         name: orderId
+ *         name: customerId
  *         schema:
  *           type: string
  *         required: true
- *         description: Order ID
+ *         description: Customer ID
  *       - in: query
  *         name: id
  *         schema:
@@ -135,44 +132,44 @@ router.put('/:orderId', async function (req, res, next) {
  *         description: Tenant ID
  *     responses:
  *       200:
- *         description: Order details retrieved successfully
+ *         description: Customer details retrieved successfully
  *       500:
  *         description: Internal server error
  */
-router.get('/:orderId', async function (req, res, next) {
+router.get('/:customerId', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orders.getOrderDetails(conn, req.params.orderId);
+        const ApiResult = await customers.getCustomerDetails(conn, req.params.customerId);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order details retrieved successfully');
+            logger.info('Customer details retrieved successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error retrieving order details', ApiResult.errors);
+            logger.error('Error retrieving customer details', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in GET /order/:orderId', error);
+        logger.error('Error in GET /customer/:customerId', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order/{orderId}:
+ * /customer/{customerId}:
  *   delete:
- *     summary: Delete an order
- *     tags: [Orders]
+ *     summary: Delete a customer
+ *     tags: [Customers]
  *     parameters:
  *       - in: path
- *         name: orderId
+ *         name: customerId
  *         schema:
  *           type: string
  *         required: true
- *         description: Order ID
+ *         description: Customer ID
  *       - in: query
  *         name: id
  *         schema:
@@ -181,37 +178,37 @@ router.get('/:orderId', async function (req, res, next) {
  *         description: Tenant ID
  *     responses:
  *       200:
- *         description: Order deleted successfully
+ *         description: Customer deleted successfully
  *       500:
  *         description: Internal server error
  */
-router.delete('/:orderId', async function (req, res, next) {
+router.delete('/:customerId', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orders.deleteOrder(conn, req.params.orderId);
+        const ApiResult = await customers.deleteCustomer(conn, req.params.customerId);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order deleted successfully');
+            logger.info('Customer deleted successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error deleting order', ApiResult.errors);
+            logger.error('Error deleting customer', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in DELETE /order/:orderId', error);
+        logger.error('Error in DELETE /customer/:customerId', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order:
+ * /customer:
  *   get:
- *     summary: List all orders
- *     tags: [Orders]
+ *     summary: List all customers
+ *     tags: [Customers]
  *     parameters:
  *       - in: query
  *         name: id
@@ -221,7 +218,7 @@ router.delete('/:orderId', async function (req, res, next) {
  *         description: Tenant ID
  *     responses:
  *       200:
- *         description: Orders listed successfully
+ *         description: Customers listed successfully
  *       500:
  *         description: Internal server error
  */
@@ -229,20 +226,20 @@ router.get('/', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orders.listOrders(conn, req.query);
+        const ApiResult = await customers.listCustomers(conn, req.query);
         ApiResult.requestId = req.requestId;
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Orders listed successfully');
+            logger.info('Customers listed successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error listing orders', ApiResult.errors);
+            logger.error('Error listing customers', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in GET /order', error);
+        logger.error('Error in GET /customer', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

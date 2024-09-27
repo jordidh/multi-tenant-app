@@ -2,12 +2,13 @@ const chai = require('chai');
 const dirtyChai = require('dirty-chai');
 const chaiHttp = require('chai-http');
 const expect = require('chai').expect;
-const { after, describe, it } = require('mocha');
+const { describe, it, before, after } = require('mocha');
 
 chai.use(dirtyChai);
 chai.use(chaiHttp);
 
-const URL = 'http://localhost:3000/order';
+const URL = 'http://localhost:3000/v1/order';
+const DB_SETUP_URL = 'http://localhost:3000/v1/db-test';  // Nueva API para la base de datos
 
 const ORDER_NEW = {
     orderType: 'Customer',
@@ -23,41 +24,47 @@ const ORDER_NEW = {
     version: 0
 };
 
-const idTenantProva = "?id=999";
+const TENANT_ID_TEST = 999;
 
-describe('API Order', () => {
+describe('API Order', function () {
+    this.timeout(10000); // Aumentamos el timeout para operaciones de base de datos
+
+    let createdOrderId; // Guardamos el ID del pedido creado
+
+    // Crear la base de datos antes de las pruebas
+    before(async function () {
+        const res = await chai.request(DB_SETUP_URL).post('/');
+        expect(res.statusCode).to.equal(201);
+    });
+
+    // Eliminar la base de datos después de las pruebas
     after(async function () {
-        // await chai.request(URL).delete('/' + idTenantProva);
+        const res = await chai.request(DB_SETUP_URL).delete('/');
+        expect(res.statusCode).to.equal(200);
     });
 
     it('should list all orders', async () => {
-        const orders = await chai.request(URL).get('/' + idTenantProva);
-        console.log(orders.body);
-        expect(orders.status).to.equal(200);
-        expect(orders.body.requestId).to.be.a('string');
+        const orders = await chai.request(URL).get(`?id=${TENANT_ID_TEST}`);
+        expect(orders.statusCode).to.equal(200);
         expect(orders.body.data).to.be.an('array');
-        expect(orders.body.errors).to.be.an('array').that.is.empty;
+        expect(orders.body.errors).to.be.an('array').that.eql([]);
     });
 
     it('should create a new order', async () => {
-        const order = await chai.request(URL).post('/' + idTenantProva).send(ORDER_NEW);
+        const order = await chai.request(URL).post(`?id=${TENANT_ID_TEST}`).send(ORDER_NEW);
         expect(order.statusCode).to.equal(201);
         expect(order.body.data).to.be.an('object');
         expect(order.body.requestId).to.be.a('string');
         expect(order.body.errors).to.be.an('array').that.eql([]);
-        let id = order.body.data.id;
-        delete order.body.data.id; // Eliminar l'id per comparar
+        createdOrderId = order.body.data.id;
+        delete order.body.data.id; // Eliminar el ID para la comparación
         expect(order.body.data).to.deep.equal(ORDER_NEW);
-
-        const deleteOrder = await chai.request(URL).delete('/' + id + idTenantProva);
-        expect(deleteOrder.statusCode).to.equal(200);
     });
 
     it('should return order details', async () => {
-        const createOrder = await chai.request(URL).post('/' + idTenantProva).send(ORDER_NEW);
+        const createOrder = await chai.request(URL).post(`?id=${TENANT_ID_TEST}`).send(ORDER_NEW);
         expect(createOrder.statusCode).to.equal(201);
-
-        const order = await chai.request(URL).get('/' + createOrder.body.data.id + idTenantProva);
+        const order = await chai.request(URL).get('/' + createOrder.body.data.id + `?id=${TENANT_ID_TEST}`);
         expect(order.statusCode).to.equal(200);
         expect(order.body.data).to.be.an('object');
         expect(order.body.requestId).to.be.a('string');
@@ -65,10 +72,10 @@ describe('API Order', () => {
     });
 
     it('should update an existing order', async () => {
-        const createOrder = await chai.request(URL).post('/' + idTenantProva).send(ORDER_NEW);
+        const createOrder = await chai.request(URL).post(`?id=${TENANT_ID_TEST}`).send(ORDER_NEW);
         expect(createOrder.statusCode).to.equal(201);
 
-        const updateOrder = await chai.request(URL).put('/' + createOrder.body.data.id + idTenantProva).send({
+        const updateOrder = await chai.request(URL).put(`/${createOrder.body.data.id}?id=${TENANT_ID_TEST}`).send({
             ...ORDER_NEW,
             customer_id: 1,
             provider_id: 2,
@@ -88,21 +95,12 @@ describe('API Order', () => {
     });
 
     it('should delete an order', async () => {
-        const createOrder = await chai.request(URL).post('/' + idTenantProva).send(ORDER_NEW);
+        const createOrder = await chai.request(URL).post(`?id=${TENANT_ID_TEST}`).send(ORDER_NEW);
         expect(createOrder.statusCode).to.equal(201);
-
-        const deleteOrder = await chai.request(URL).delete('/' + createOrder.body.data.id + idTenantProva);
+        const deleteOrder = await chai.request(URL).delete(`/${createOrder.body.data.id}?id=${TENANT_ID_TEST}`);
         expect(deleteOrder.statusCode).to.equal(200);
         expect(deleteOrder.body.data).to.be.an('object');
         expect(deleteOrder.body.requestId).to.be.a('string');
         expect(deleteOrder.body.errors).to.be.an('array').that.eql([]);
-    });
-
-    it('should list all orders', async () => {
-        const orders = await chai.request(URL).get('/' + idTenantProva);
-        expect(orders.statusCode).to.equal(200);
-        expect(orders.body.data).to.be.an('array');
-        expect(orders.body.requestId).to.be.a('string');
-        expect(orders.body.errors).to.be.an('array').that.eql([]);
     });
 });

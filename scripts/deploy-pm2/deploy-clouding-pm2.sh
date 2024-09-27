@@ -154,7 +154,7 @@ sudo bash -c 'echo "DB_HOST='127.0.0.1'" > .env'
 sudo bash -c 'echo "DB_USER='$mysqlUsername'" >> .env' 
 sudo bash -c 'echo "DB_PASSWORD='$mysqlPassword'" >> .env'
 sudo bash -c 'echo "DB_DATABASE='tenants_app'" >> .env'
-sudo bash -c 'echo "ARTILLERY_TEST_DB='db_test'" >> .env'
+sudo bash -c 'echo "ARTILLERY_TEST_DB='db_test_insert'" >> .env'
 sudo bash -c 'echo "DB_USER_TEST='user_test'" >> .env'
 sudo bash -c 'echo "DB_PASSWORD_TEST='root'" >> .env'
 sudo bash -c 'echo "DB_HOST_TEST='%'" >> .env'
@@ -231,7 +231,7 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'remote_user'@'%' WITH GRANT OPTIO
 #mysql < /var/lib/onion/apps-conf/onion/cbwms-dump-v16.114.sql
 sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/tenants_app.sql
 # Script per crear la base de dades que fará servir els test artillery
-sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_test.sql
+sudo mysql < /home/root/multitenant/multi-tenant-app/scripts/db/db_test_insert.sql
 
 
 printf "\n*** PAS 6: Creem els serveis al pm2\n"

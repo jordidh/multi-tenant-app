@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../api/logger');
-const orderLines = require('../api/order_line');
-const tenantdb = require('../api/tenantdb');
+const logger = require('../../api/logger');
+const orders = require('../../api/order');
+const tenantdb = require('../../api/tenantdb');
 
 /**
  * @swagger
  * tags:
- *   name: OrderLines
- *   description: API for managing order lines
+ *   name: Orders
+ *   description: API for managing orders
  */
 
 /**
  * @swagger
- * /order_line:
+ * /order:
  *   post:
- *     summary: Create a new order line
- *     tags: [OrderLines]
+ *     summary: Create a new order
+ *     tags: [Orders]
  *     parameters:
  *       - in: query
  *         name: id
@@ -30,93 +30,50 @@ const tenantdb = require('../api/tenantdb');
  *         application/json:
  *           schema:
  *             type: object
- *             example: { "order_id": 1, "product_id": 123, "quantity": 10, "price": 99.99 }
+ *             example: { "orderId": "12345", "product": "Example Product", "quantity": 1 }
  *     responses:
  *       201:
- *         description: Order line created successfully
+ *         description: Order created successfully
  *       500:
  *         description: Internal server error
  */
 router.post('/', async function (req, res, next) {
     try {
+        console.log(req.query);
+        console.log(req.params);
         const id = parseInt(req.query.id, 10);
+        console.log('Tenant ID:', id);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orderLines.createOrderLine(conn, req.body);
+        const ApiResult = await orders.createOrder(conn, req.body);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order line created successfully');
+            logger.info('Order created successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error creating order line', ApiResult.errors);
+            logger.error('Error creating order', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in POST /order_line', error);
+        logger.error('Error in POST /order', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order_line/{orderLineId}:
- *   get:
- *     summary: Get order line details
- *     tags: [OrderLines]
- *     parameters:
- *       - in: path
- *         name: orderLineId
- *         schema:
- *           type: string
- *         required: true
- *         description: Order Line ID
- *       - in: query
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: Tenant ID
- *     responses:
- *       200:
- *         description: Order line details retrieved successfully
- *       500:
- *         description: Internal server error
- */
-router.get('/:orderLineId', async function (req, res, next) {
-    try {
-        const id = parseInt(req.query.id, 10);
-        const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orderLines.getOrderLineDetails(conn, req.params.orderLineId);
-
-        if (ApiResult.errors.length === 0) {
-            logger.info('Order line details retrieved successfully');
-            conn.release();
-            res.status(ApiResult.status).json(ApiResult);
-        } else {
-            logger.error('Error retrieving order line details', ApiResult.errors);
-            conn.release();
-            res.status(ApiResult.status).json(ApiResult);
-        }
-    } catch (error) {
-        logger.error('Error in GET /order_line/:orderLineId', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-/**
- * @swagger
- * /order_line/{orderLineId}:
+ * /order/{orderId}:
  *   put:
- *     summary: Update an existing order line
- *     tags: [OrderLines]
+ *     summary: Update an existing order
+ *     tags: [Orders]
  *     parameters:
  *       - in: path
- *         name: orderLineId
+ *         name: orderId
  *         schema:
  *           type: string
  *         required: true
- *         description: Order Line ID
+ *         description: Order ID
  *       - in: query
  *         name: id
  *         schema:
@@ -129,62 +86,47 @@ router.get('/:orderLineId', async function (req, res, next) {
  *         application/json:
  *           schema:
  *             type: object
- *             properties:
- *               order_id:
- *                 type: integer
- *                 example: 1
- *               product_id:
- *                 type: integer
- *                 example: 123
- *               quantity:
- *                 type: integer
- *                 example: 10
- *               unit_id:
- *                 type: integer
- *                 example: 1
- *               price:
- *                 type: number
- *                 example: 99.99
+ *             example: { "product": "Updated Product", "quantity": 2 }
  *     responses:
  *       200:
- *         description: Order line updated successfully
+ *         description: Order updated successfully
  *       500:
  *         description: Internal server error
  */
-router.put('/:orderLineId', async function (req, res, next) {
+router.put('/:orderId', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orderLines.updateOrderLine(conn, req.params.orderLineId, req.body);
+        const ApiResult = await orders.updateOrder(conn, req.params.orderId, req.body);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order line updated successfully');
+            logger.info('Order updated successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error updating order line', ApiResult.errors);
+            logger.error('Error updating order', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in PUT /order_line/:orderLineId', error);
+        logger.error('Error in PUT /order/:orderId', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order_line/{orderLineId}:
- *   delete:
- *     summary: Delete an order line
- *     tags: [OrderLines]
+ * /order/{orderId}:
+ *   get:
+ *     summary: Get order details
+ *     tags: [Orders]
  *     parameters:
  *       - in: path
- *         name: orderLineId
+ *         name: orderId
  *         schema:
  *           type: string
  *         required: true
- *         description: Order Line ID
+ *         description: Order ID
  *       - in: query
  *         name: id
  *         schema:
@@ -193,37 +135,83 @@ router.put('/:orderLineId', async function (req, res, next) {
  *         description: Tenant ID
  *     responses:
  *       200:
- *         description: Order line deleted successfully
+ *         description: Order details retrieved successfully
  *       500:
  *         description: Internal server error
  */
-router.delete('/:orderLineId', async function (req, res, next) {
+router.get('/:orderId', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orderLines.deleteOrderLine(conn, req.params.orderLineId);
+        const ApiResult = await orders.getOrderDetails(conn, req.params.orderId);
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order line deleted successfully');
+            logger.info('Order details retrieved successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error deleting order line', ApiResult.errors);
+            logger.error('Error retrieving order details', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in DELETE /order_line/:orderLineId', error);
+        logger.error('Error in GET /order/:orderId', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 /**
  * @swagger
- * /order_line:
+ * /order/{orderId}:
+ *   delete:
+ *     summary: Delete an order
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Tenant ID
+ *     responses:
+ *       200:
+ *         description: Order deleted successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/:orderId', async function (req, res, next) {
+    try {
+        const id = parseInt(req.query.id, 10);
+        const conn = await tenantdb.getPromisePool(id).getConnection();
+        const ApiResult = await orders.deleteOrder(conn, req.params.orderId);
+
+        if (ApiResult.errors.length === 0) {
+            logger.info('Order deleted successfully');
+            conn.release();
+            res.status(ApiResult.status).json(ApiResult);
+        } else {
+            logger.error('Error deleting order', ApiResult.errors);
+            conn.release();
+            res.status(ApiResult.status).json(ApiResult);
+        }
+    } catch (error) {
+        logger.error('Error in DELETE /order/:orderId', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/**
+ * @swagger
+ * /order:
  *   get:
- *     summary: List all order lines
- *     tags: [OrderLines]
+ *     summary: List all orders
+ *     tags: [Orders]
  *     parameters:
  *       - in: query
  *         name: id
@@ -233,7 +221,7 @@ router.delete('/:orderLineId', async function (req, res, next) {
  *         description: Tenant ID
  *     responses:
  *       200:
- *         description: Order lines listed successfully
+ *         description: Orders listed successfully
  *       500:
  *         description: Internal server error
  */
@@ -241,19 +229,20 @@ router.get('/', async function (req, res, next) {
     try {
         const id = parseInt(req.query.id, 10);
         const conn = await tenantdb.getPromisePool(id).getConnection();
-        const ApiResult = await orderLines.listOrderLines(conn, req.query);
+        const ApiResult = await orders.listOrders(conn, req.query);
+        ApiResult.requestId = req.requestId;
 
         if (ApiResult.errors.length === 0) {
-            logger.info('Order lines listed successfully');
+            logger.info('Orders listed successfully');
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         } else {
-            logger.error('Error listing order lines', ApiResult.errors);
+            logger.error('Error listing orders', ApiResult.errors);
             conn.release();
             res.status(ApiResult.status).json(ApiResult);
         }
     } catch (error) {
-        logger.error('Error in GET /order_line', error);
+        logger.error('Error in GET /order', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

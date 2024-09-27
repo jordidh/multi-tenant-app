@@ -94,3 +94,9 @@ CREATE TABLE `activationcodes` (
 --     `token` VARCHAR(255) NOT NULL UNIQUE,
 --     `expiration_date` TIMESTAMP DEFAULT NOW()
 -- );
+
+INSERT INTO tenants (uuid, db_name, db_host, db_username, db_password, db_port, created_at, updated_at) 
+VALUES 
+('tenant1-uuid', 'db_tenant1', 'localhost', 'user_tenant1', 'password_tenant1', 3306, NOW(), NOW()),
+('tenant2-uuid', 'db_tenant2', 'localhost', 'user_tenant2', 'password_tenant2', 3306, NOW(), NOW()),
+('tenant3-uuid', 'db_tenant3', 'localhost', 'user_tenant3', 'password_tenant3', 3306, NOW(), NOW());

@@ -32,7 +32,7 @@ router.get(('/'), async function (req, res, next) {
         (1, 'UNIT01', 'descripcio de prova1', 1), 
         (2, 'UNIT02', 'descripcio de prova', 10);`);
         if (insertUnit.length !== 2) {
-            throw new Error('Couldn\'t insert values into db_test_insert.unit');
+            throw new Error(`Couldn't insert values into ${process.env.DB_DATABASE_TEST}.unit`);
         }
 
         const insertProduct = await conn.execute(`INSERT INTO product (id, code, description) VALUES 

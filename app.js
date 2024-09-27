@@ -129,11 +129,11 @@ async function getAllDatabase() {
             const tenant = totalTenants[0][i];
             const dbConfig = {
                 id: tenant.id,
-                host: tenant.db_host || process.env.DB_HOST, 
-                port: tenant.db_port || process.env.DB_PORT, 
-                user: tenant.db_username || process.env.DB_USER, 
-                password: tenant.db_password || process.env.DB_PASSWORD, 
-                database: tenant.db_name || process.env.DB_DATABASE, 
+                host: tenant.db_host, 
+                port: tenant.db_port, 
+                user: tenant.db_username, 
+                password: tenant.db_password,
+                database: tenant.db_name, 
                 connectionLimit: process.env.DB_CONNECTION_LIMIT || 10
             };
             dbs.push(dbConfig);
